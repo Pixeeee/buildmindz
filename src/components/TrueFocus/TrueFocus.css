@@ -1,0 +1,39 @@
+.focus-container {
+  position: relative;
+  display: flex;
+  gap: 0.4em;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  /* Frame is absolutely positioned inside */
+}
+
+.focus-word {
+  display: inline-block;
+  color: #ffffff;
+  cursor: default;
+  /* blur transition driven by inline style */
+}
+
+.focus-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border-radius: 6px;
+  /* box-glow */
+  box-shadow: 0 0 8px 2px var(--glow-color, rgba(82,39,255,0.6));
+}
+
+/* Corner tick marks */
+.corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--border-color, #5227FF);
+  border-style: solid;
+}
+.corner.top-left     { top: -2px;    left: -2px;    border-width: 2px 0 0 2px; }
+.corner.top-right    { top: -2px;    right: -2px;   border-width: 2px 2px 0 0; }
+.corner.bottom-left  { bottom: -2px; left: -2px;    border-width: 0 0 2px 2px; }
+.corner.bottom-right { bottom: -2px; right: -2px;   border-width: 0 2px 2px 0; }

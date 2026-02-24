@@ -1,0 +1,50 @@
+/* =========================
+   Section Header
+   ========================= */
+.section-header {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s ease;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.section-header.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-divider {
+  width: 60px;
+  height: 3px;
+  background: #000;
+  margin: 1.5rem auto 0;
+  position: relative;
+}
+
+.section-divider::after {
+  content: '';
+  position: absolute;
+  left: -70px;
+  top: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(to right, transparent, #000);
+}
+
+.section-divider::before {
+  content: '';
+  position: absolute;
+  right: -70px;
+  top: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(to left, transparent, #000);
+}
+
+@media (max-width: 576px) {
+  .section-divider::before,
+  .section-divider::after {
+    display: none;
+  }
+}

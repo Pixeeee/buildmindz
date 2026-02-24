@@ -1,0 +1,281 @@
+/* =========================
+   Hero Section — Centered layout
+   Logo rendered by ScrollingLogo (fixed, cross-section)
+   ========================= */
+:root {
+  --hero-bg:     #f4f4f6;
+  --hero-bg-end: #ffffff;
+  --hero-dot:    rgba(0, 0, 0, 0.09);
+  --hero-marker: rgba(0, 0, 0, 0.22);
+  --hero-text:   #0a0a0a;
+}
+
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse 80% 60% at 50% 40%,
+    var(--hero-bg-end) 0%,
+    var(--hero-bg) 100%
+  );
+  /* top padding accounts for fixed navbar; bottom padding for logo area */
+  padding: 100px 1.5rem 0;
+  gap: 0;
+}
+
+/* =========================
+   Particles background
+   ========================= */
+.hero-particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* =========================
+   Text content — upper half
+   ========================= */
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 780px;
+  width: 100%;
+  /* sits in the top ~50% of the viewport */
+  padding-bottom: 3rem;
+}
+
+.hero-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 1.2rem;
+}
+
+.hero-headline {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(2.4rem, 5.2vw, 4.8rem);
+  font-weight: 800;
+  line-height: 1.07;
+  letter-spacing: -0.02em;
+  color: var(--hero-text);
+  margin: 0 0 2rem;
+}
+
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.85rem 2rem;
+  background: #0a0a0a;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 2px solid #0a0a0a;
+  border-radius: 999px;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+}
+.hero-cta:hover {
+  background: transparent;
+  color: #0a0a0a;
+  transform: translateY(-2px);
+}
+.hero-cta svg { transition: transform 0.2s ease; }
+.hero-cta:hover svg { transform: translateX(4px); }
+
+/* =========================
+   Logo placeholder area — lower half
+   Centred box that the fixed ScrollingLogo sits over on load
+   ========================= */
+.hero-logo-area {
+  position: relative;
+  z-index: 1;
+  /* match ScrollingLogo's initial rendered size */
+  width:  clamp(200px, 32vw, 360px);
+  height: clamp(200px, 32vw, 360px);
+  flex-shrink: 0;
+  /* slight bottom breathing room before the scroll indicator */
+  margin-bottom: 4rem;
+}
+
+/* =========================
+   Corner bracket markers
+   ========================= */
+.corner {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: var(--hero-marker);
+  border-style: solid;
+}
+.corner.tl { top: 0;    left:  0;  border-width: 1.5px 0 0 1.5px; }
+.corner.tr { top: 0;    right: 0;  border-width: 1.5px 1.5px 0 0; }
+.corner.bl { bottom: 0; left:  0;  border-width: 0 0 1.5px 1.5px; }
+.corner.br { bottom: 0; right: 0;  border-width: 0 1.5px 1.5px 0; }
+
+/* × labels at corners */
+.corner.tl::after,
+.corner.tr::after,
+.corner.bl::after,
+.corner.br::after {
+  content: '×';
+  position: absolute;
+  font-size: 9px;
+  color: var(--hero-marker);
+  font-family: monospace;
+  line-height: 1;
+}
+.corner.tl::after { top: -12px; left: -4px; }
+.corner.tr::after { top: -12px; right: -4px; }
+.corner.bl::after { bottom: -12px; left: -4px; }
+.corner.br::after { bottom: -12px; right: -4px; }
+
+/* Tick marks */
+.tick { position: absolute; display: block; }
+.tick::before,
+.tick::after { content: ''; position: absolute; background: var(--hero-marker); }
+
+.tick-top    { top: -1px; left: 50%; transform: translateX(-50%); }
+.tick-top::before    { width: 10px; height: 1px; top: 0;    left: -5px;   }
+.tick-top::after     { width: 1px;  height: 6px; top: 0;    left: -0.5px; }
+
+.tick-bottom { bottom: -1px; left: 50%; transform: translateX(-50%); }
+.tick-bottom::before { width: 10px; height: 1px; bottom: 0; left: -5px;   }
+.tick-bottom::after  { width: 1px;  height: 6px; bottom: 0; left: -0.5px; }
+
+.tick-left   { left: -1px; top: 50%; transform: translateY(-50%); }
+.tick-left::before  { width: 1px; height: 10px; left: 0; top: -5px;   }
+.tick-left::after   { width: 6px; height: 1px;  left: 0; top: -0.5px; }
+
+.tick-right  { right: -1px; top: 50%; transform: translateY(-50%); }
+.tick-right::before { width: 1px; height: 10px; right: 0; top: -5px;   }
+.tick-right::after  { width: 6px; height: 1px;  right: 0; top: -0.5px; }
+
+/* =========================
+   Scroll indicator
+   ========================= */
+.scroll-indicator {
+  position: absolute;
+  bottom: 1.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.animate-bounce { animation: bounce 2s infinite; }
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+  40% { transform: translateX(-50%) translateY(-10px); }
+  60% { transform: translateX(-50%) translateY(-5px); }
+}
+.mouse {
+  width: 26px;
+  height: 42px;
+  border: 2px solid rgba(0, 0, 0, 0.28);
+  border-radius: 14px;
+  position: relative;
+}
+.wheel {
+  width: 3px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.32);
+  border-radius: 2px;
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollWheel 1.5s infinite;
+}
+@keyframes scrollWheel {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(14px); }
+}
+
+/* =========================
+   Entrance animations
+   ========================= */
+.animate-fade-in {
+  opacity: 0;
+  transform: translateY(26px);
+  animation: fadeInUp 0.85s ease forwards;
+}
+.animate-fade-in-delay-1 {
+  opacity: 0;
+  transform: translateY(26px);
+  animation: fadeInUp 0.85s ease 0.15s forwards;
+}
+.animate-fade-in-delay-2 {
+  opacity: 0;
+  transform: translateY(26px);
+  animation: fadeInUp 0.85s ease 0.3s forwards;
+}
+.animate-fade-in-delay-3 {
+  opacity: 0;
+  animation: fadeInUp 0.85s ease 0.45s forwards;
+}
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+/* Tablet */
+@media (max-width: 992px) {
+  .hero-headline {
+    font-size: clamp(2.2rem, 6.5vw, 3.6rem);
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hero-section {
+    padding-top: 90px;
+    min-height: 100svh; /* safe-area aware */
+  }
+
+  .hero-headline {
+    font-size: clamp(1.9rem, 8vw, 2.8rem);
+    line-height: 1.1;
+  }
+
+  .hero-logo-area {
+    width:  clamp(160px, 60vw, 260px);
+    height: clamp(160px, 60vw, 260px);
+    margin-bottom: 3.5rem;
+  }
+
+  .hero-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+  }
+
+  .hero-cta {
+    font-size: 0.78rem;
+    padding: 0.75rem 1.6rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .hero-headline {
+    font-size: clamp(1.6rem, 9vw, 2.2rem);
+  }
+
+  .hero-logo-area {
+    width:  clamp(140px, 55vw, 220px);
+    height: clamp(140px, 55vw, 220px);
+    margin-bottom: 3rem;
+  }
+}

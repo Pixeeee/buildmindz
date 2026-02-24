@@ -1,0 +1,87 @@
+/* =========================
+   Global Base Styles
+   Component-specific styles live
+   in each component's own CSS file.
+   ========================= */
+
+body,
+html,
+#root,
+.App {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+.App,
+.landing-page {
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* =========================
+   Shared Scroll Animation
+   Used across multiple components
+   ========================= */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: all 0.6s ease;
+}
+
+.fade-in-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =========================
+   Section Spacing
+   ========================= */
+.section-spacing {
+  padding: 100px 0 !important;
+}
+
+@media (max-width: 768px) {
+  .section-spacing {
+    padding: 60px 0 !important;
+  }
+}
+
+/* =========================
+   Performance Optimizations
+   ========================= */
+.card,
+.btn,
+.value-card,
+.team-card {
+  will-change: transform;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =========================
+   Hide Scrollbar But Keep Scroll
+   ========================= */
+
+/* Firefox */
+html {
+  scrollbar-width: none;
+}
+
+/* Chrome, Edge, Safari */
+html::-webkit-scrollbar {
+  display: none;
+}
