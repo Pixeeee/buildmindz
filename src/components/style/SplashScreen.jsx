@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Orb from "../Orb/Orb";
-import TrueFocus from "../TrueFocus/TrueFocus";
+import Shuffle from "../Shuffle/Shuffle";
 import "./splash.css";
 
 export default function SplashScreen({ onFinish }) {
@@ -8,13 +8,13 @@ export default function SplashScreen({ onFinish }) {
 
   const handleDiveIn = () => {
     setLeaving(true);
-    setTimeout(onFinish, 600); // wait for fade-out transition
+    setTimeout(onFinish, 600);
   };
 
   return (
     <div className={`splash ${leaving ? "splash--leaving" : ""}`}>
 
-      {/* ── Orb — fills the entire splash background ── */}
+      {/* Orb fills the entire splash background */}
       <div className="splash-orb">
         <Orb
           hoverIntensity={2}
@@ -25,19 +25,32 @@ export default function SplashScreen({ onFinish }) {
         />
       </div>
 
-      {/* ── Centred content ── */}
+      {/* Centred content */}
       <div className="splash-content">
 
-        {/* TrueFocus animated brand name */}
+        {/* Shuffle animated brand name */}
         <div className="splash-focus-wrap">
-          <TrueFocus
-            sentence="BUILD MINDZ"
-            manualMode={false}
-            blurAmount={6}
-            borderColor="#ffffff"
-            glowColor="rgba(255,255,255,0.45)"
-            animationDuration={0.6}
-            pauseBetweenAnimations={1.2}
+          <Shuffle
+            text="BUILD"
+            shuffleDirection="up"
+            duration={1.5}
+            animationMode="evenodd"
+            shuffleTimes={2}
+            ease="power3.out"
+            stagger={0.5}
+            triggerOnce={true}
+            triggerOnHover={true}
+          />
+          <Shuffle
+            text="MINDZ"
+            shuffleDirection="up"
+            duration={1.5}
+            animationMode="evenodd"
+            shuffleTimes={2}
+            ease="power3.out"
+            stagger={0.5}
+            triggerOnce={true}
+            triggerOnHover={true}
           />
         </div>
 
