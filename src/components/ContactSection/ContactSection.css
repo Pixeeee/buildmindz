@@ -1,0 +1,517 @@
+/* ════════════════════════════════════════════════════
+   CONTACT SECTION
+   Palette: #0a0a0a ink · #f4f4f6 off-white · #ffffff
+   Font:    Didot, Georgia, serif (matches site)
+   ════════════════════════════════════════════════════ */
+
+.cs-section {
+  width: 100%;
+  background: #f4f4f6;
+  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 8vw, 9rem) clamp(5rem, 10vw, 8rem);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ── Reveal animation ──────────────────────────────── */
+.cs-eyebrow,
+.cs-headline,
+.cs-info,
+.cs-form-wrap {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cs-headline      { transition-delay: 0.1s; }
+.cs-info          { transition-delay: 0.18s; }
+.cs-form-wrap     { transition-delay: 0.28s; }
+
+.cs-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Eyebrow ───────────────────────────────────────── */
+.cs-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.cs-eyebrow-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(10, 10, 10, 0.15);
+  max-width: 80px;
+}
+
+.cs-eyebrow-text {
+  font-family: 'Didot', Georgia, serif;
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.45);
+}
+
+/* ── Headline ──────────────────────────────────────── */
+.cs-headline {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(2.8rem, 7vw, 7rem);
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: #0a0a0a;
+  margin: 0 0 clamp(3rem, 6vw, 6rem);
+}
+
+.cs-headline em {
+  font-style: italic;
+  color: rgba(10, 10, 10, 0.4);
+}
+
+/* ── Split body ────────────────────────────────────── */
+.cs-body {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: clamp(3rem, 6vw, 7rem);
+  align-items: start;
+}
+
+/* ── Info column ───────────────────────────────────── */
+.cs-info {
+  padding-top: 0.5rem;
+}
+
+.cs-tagline {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(0.9rem, 1.4vw, 1.1rem);
+  font-weight: 400;
+  line-height: 1.7;
+  color: rgba(10, 10, 10, 0.55);
+  margin: 0 0 2.5rem;
+  max-width: 28ch;
+}
+
+.cs-contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cs-contact-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.1rem 0;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+}
+
+.cs-contact-item:first-child {
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+}
+
+.cs-contact-label {
+  font-family: 'Didot', Georgia, serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.35);
+}
+
+.cs-contact-value {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(0.9rem, 1.2vw, 1rem);
+  color: #0a0a0a;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a.cs-contact-value:hover {
+  color: rgba(10, 10, 10, 0.5);
+}
+
+/* Availability pulse dot */
+.cs-available {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cs-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2a9d60;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.cs-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid #2a9d60;
+  opacity: 0;
+  animation: cs-pulse-ring 2s ease-out infinite;
+}
+
+@keyframes cs-pulse-ring {
+  0%   { transform: scale(0.7); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ── Form ──────────────────────────────────────────── */
+.cs-form-wrap {
+  background: #ffffff;
+  border: 1px solid rgba(10, 10, 10, 0.07);
+  padding: clamp(2rem, 4vw, 3.5rem);
+}
+
+.cs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+.cs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.cs-label {
+  font-family: 'Didot', Georgia, serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.4);
+}
+
+.cs-input {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(0.9rem, 1.2vw, 1rem);
+  color: #0a0a0a;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.15);
+  border-radius: 0;
+  padding: 0.6rem 0;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.25s ease;
+  resize: none;
+}
+
+.cs-input::placeholder {
+  color: rgba(10, 10, 10, 0.22);
+}
+
+.cs-input:focus {
+  border-bottom-color: #0a0a0a;
+}
+
+.cs-textarea {
+  min-height: 110px;
+  line-height: 1.6;
+}
+
+/* ── Submit button ─────────────────────────────────── */
+.cs-btn {
+  font-family: 'Didot', Georgia, serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f4f4f6;
+  background: #0a0a0a;
+  border: 1px solid #0a0a0a;
+  padding: 1rem 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-width: 200px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+.cs-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #f4f4f6;
+  transform: translateX(-101%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cs-btn:hover:not(:disabled)::before { transform: translateX(0); }
+.cs-btn:hover:not(:disabled) { color: #0a0a0a; }
+
+.cs-btn:active:not(:disabled) { transform: scale(0.98); }
+
+.cs-btn:disabled { cursor: default; }
+
+.cs-btn--sent {
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+}
+
+.cs-btn-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cs-arrow {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.cs-btn:hover .cs-arrow { transform: translateX(4px); }
+
+/* Spinner */
+.cs-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid rgba(244, 244, 246, 0.35);
+  border-top-color: #f4f4f6;
+  border-radius: 50%;
+  animation: cs-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes cs-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Checkmark — CSS-drawn */
+.cs-check {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.cs-check::before {
+  content: '';
+  position: absolute;
+  left: 1px;
+  top: 4px;
+  width: 4px;
+  height: 2px;
+  background: #f4f4f6;
+  transform: rotate(45deg);
+  transform-origin: bottom left;
+}
+
+.cs-check::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 2px;
+  width: 9px;
+  height: 2px;
+  background: #f4f4f6;
+  transform: rotate(-50deg);
+  transform-origin: bottom left;
+}
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 900px) {
+  .cs-body {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+
+  .cs-tagline { max-width: 100%; }
+
+  .cs-contact-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 2rem;
+  }
+
+  .cs-contact-item { border-top: 1px solid rgba(10,10,10,0.08); }
+  .cs-contact-item:first-child { border-top: 1px solid rgba(10,10,10,0.08); }
+}
+
+@media (max-width: 600px) {
+  .cs-section { padding: 4rem 1.25rem 4rem; }
+
+  .cs-contact-list {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-btn { width: 100%; justify-content: center; }
+
+  .cs-headline { margin-bottom: 2.5rem; }
+}
+
+
+/* ════════════════════════════════════════════════════
+   FAQ ACCORDION
+   ════════════════════════════════════════════════════ */
+
+.cs-faq-section {
+  margin-top: clamp(4rem, 8vw, 7rem);
+  padding-top: clamp(3rem, 6vw, 5rem);
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity   0.75s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.1s;
+}
+
+.cs-faq-section.cs-reveal {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.cs-faq-heading-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
+}
+
+.cs-faq-heading {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(1.6rem, 3.5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: #0a0a0a;
+  margin: 0;
+}
+
+.cs-faq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 clamp(2rem, 5vw, 6rem);
+}
+
+.cs-faq-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.cs-faq-item {
+  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+}
+
+.cs-faq-item:first-child {
+  border-top: 1px solid rgba(10, 10, 10, 0.08);
+}
+
+.cs-faq-header {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 0;
+  text-align: left;
+}
+
+.cs-faq-num {
+  font-family: 'Didot', Georgia, serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  color: rgba(10, 10, 10, 0.25);
+  flex-shrink: 0;
+  min-width: 1.8rem;
+}
+
+.cs-faq-q {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(0.88rem, 1.3vw, 1.05rem);
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(10, 10, 10, 0.75);
+  flex: 1;
+  transition: color 0.2s ease;
+}
+
+.cs-faq-item--open .cs-faq-q,
+.cs-faq-header:hover .cs-faq-q {
+  color: #0a0a0a;
+}
+
+.cs-faq-icon {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  position: relative;
+  margin-left: auto;
+}
+
+.cs-faq-icon-bar {
+  position: absolute;
+  background: rgba(10, 10, 10, 0.4);
+  border-radius: 1px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity   0.35s ease;
+}
+
+.cs-faq-icon-bar--h {
+  width: 14px;
+  height: 1.5px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.cs-faq-icon-bar--v {
+  width: 1.5px;
+  height: 14px;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+.cs-faq-item--open .cs-faq-icon-bar--v {
+  transform: translateX(-50%) scaleY(0);
+  opacity: 0;
+}
+
+.cs-faq-item--open .cs-faq-icon-bar--h {
+  background: rgba(10, 10, 10, 0.7);
+}
+
+.cs-faq-panel {
+  overflow: hidden;
+  height: 0;
+  transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cs-faq-panel-inner {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(0.85rem, 1.2vw, 0.95rem);
+  line-height: 1.75;
+  color: rgba(10, 10, 10, 0.5);
+  padding: 0 0 1.4rem 2.8rem;
+}
+
+@media (max-width: 760px) {
+  .cs-faq-grid { grid-template-columns: 1fr; }
+  .cs-faq-col:last-child .cs-faq-item:first-child { border-top: none; }
+  .cs-faq-heading-row { flex-direction: column; gap: 0.5rem; }
+}

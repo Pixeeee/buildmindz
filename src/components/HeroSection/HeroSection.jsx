@@ -1,11 +1,45 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import Particles from "../Particles/Particles";
 import "./HeroSection.css";
 
-// sectionRef  → the <section> element (for scroll progress)
-// logoAreaRef → the placeholder box (so ScrollingLogo can pin to its exact centre)
+// ─── Inject visualViewport dimensions as CSS variables ───────────────────────
+// --vvw / --vvh always equal the REAL rendered viewport, even at 200% zoom.
+// CSS vh/vw units are based on the layout viewport and are WRONG at zoom.
+function useVisualViewportVars(ref) {
+  useEffect(() => {
+    const el = ref?.current ?? document.documentElement;
+
+    const update = () => {
+      const vv = window.visualViewport;
+      const w  = vv ? vv.width  : window.innerWidth;
+      const h  = vv ? vv.height : window.innerHeight;
+      el.style.setProperty("--vvw", `${w}px`);
+      el.style.setProperty("--vvh", `${h}px`);
+    };
+
+    update();
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", update);
+      window.visualViewport.addEventListener("scroll", update);
+    }
+    window.addEventListener("resize", update);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", update);
+        window.visualViewport.removeEventListener("scroll", update);
+      }
+      window.removeEventListener("resize", update);
+    };
+  }, [ref]);
+}
+
 const HeroSection = forwardRef(function HeroSection({ logoAreaRef }, sectionRef) {
+  // Set --vvw / --vvh on the section element so CSS can use them
+  useVisualViewportVars(sectionRef);
+
   return (
     <section id="home" className="hero-section" ref={sectionRef}>
 
@@ -26,7 +60,7 @@ const HeroSection = forwardRef(function HeroSection({ logoAreaRef }, sectionRef)
         />
       </div>
 
-      {/* ── Centered text ── */}
+      {/* Centered text */}
       <div className="hero-content">
         <p className="hero-eyebrow animate-fade-in">
           WEB3 FORWARD &nbsp;·&nbsp; BUILDMINDZ
@@ -41,7 +75,7 @@ const HeroSection = forwardRef(function HeroSection({ logoAreaRef }, sectionRef)
         </a>
       </div>
 
-      {/* ── Logo placeholder — ScrollingLogo pins to its exact centre ── */}
+      {/* Logo placeholder — ScrollingLogo pins to its exact centre */}
       <div
         className="hero-logo-area animate-fade-in-delay-3"
         ref={logoAreaRef}

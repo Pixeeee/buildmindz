@@ -1,18 +1,23 @@
 /* =========================
-   Hero Section — Centered layout
-   Logo rendered by ScrollingLogo (fixed, cross-section)
+   Hero Section
+   Uses --vvw / --vvh (set by JS from visualViewport)
+   instead of vw / vh so browser zoom is handled correctly.
+   Fallback: 100vw / 100vh for SSR / no-JS.
    ========================= */
 :root {
+  --vvw: 100vw;
+  --vvh: 100vh;
   --hero-bg:     #f4f4f6;
   --hero-bg-end: #ffffff;
-  --hero-dot:    rgba(0, 0, 0, 0.09);
   --hero-marker: rgba(0, 0, 0, 0.22);
   --hero-text:   #0a0a0a;
 }
 
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  /* Use visual-viewport height — correct at every zoom level */
+  min-height: var(--vvh, 100vh);
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -24,9 +29,10 @@
     var(--hero-bg-end) 0%,
     var(--hero-bg) 100%
   );
-  /* top padding accounts for fixed navbar; bottom padding for logo area */
   padding: 100px 1.5rem 0;
   gap: 0;
+  /* Ensure it fills correctly under zoom */
+  box-sizing: border-box;
 }
 
 /* =========================
@@ -35,19 +41,20 @@
 .hero-particles {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
   pointer-events: none;
 }
 
 /* =========================
-   Text content — upper half
+   Text content
    ========================= */
 .hero-content {
   position: relative;
   z-index: 2;
   max-width: 780px;
   width: 100%;
-  /* sits in the top ~50% of the viewport */
   padding-bottom: 3rem;
 }
 
@@ -62,7 +69,8 @@
 
 .hero-headline {
   font-family: 'Didot', Georgia, serif;
-  font-size: clamp(2.4rem, 5.2vw, 4.8rem);
+  /* Use --vvw so font scales correctly at any zoom */
+  font-size: clamp(2rem, calc(var(--vvw, 100vw) * 0.052), 4.8rem);
   font-weight: 800;
   line-height: 1.07;
   letter-spacing: -0.02em;
@@ -95,17 +103,16 @@
 .hero-cta:hover svg { transform: translateX(4px); }
 
 /* =========================
-   Logo placeholder area — lower half
-   Centred box that the fixed ScrollingLogo sits over on load
+   Logo placeholder area
+   Uses --vvw for sizing — correct at any zoom
    ========================= */
 .hero-logo-area {
   position: relative;
   z-index: 1;
-  /* match ScrollingLogo's initial rendered size */
-  width:  clamp(200px, 32vw, 360px);
-  height: clamp(200px, 32vw, 360px);
+  /* clamp against visual viewport width */
+  width:  clamp(160px, calc(var(--vvw, 100vw) * 0.30), 340px);
+  height: clamp(160px, calc(var(--vvw, 100vw) * 0.30), 340px);
   flex-shrink: 0;
-  /* slight bottom breathing room before the scroll indicator */
   margin-bottom: 4rem;
 }
 
@@ -124,7 +131,6 @@
 .corner.bl { bottom: 0; left:  0;  border-width: 0 0 1.5px 1.5px; }
 .corner.br { bottom: 0; right: 0;  border-width: 0 1.5px 1.5px 0; }
 
-/* × labels at corners */
 .corner.tl::after,
 .corner.tr::after,
 .corner.bl::after,
@@ -146,7 +152,7 @@
 .tick::before,
 .tick::after { content: ''; position: absolute; background: var(--hero-marker); }
 
-.tick-top    { top: -1px; left: 50%; transform: translateX(-50%); }
+.tick-top    { top: -1px;    left: 50%; transform: translateX(-50%); }
 .tick-top::before    { width: 10px; height: 1px; top: 0;    left: -5px;   }
 .tick-top::after     { width: 1px;  height: 6px; top: 0;    left: -0.5px; }
 
@@ -154,11 +160,11 @@
 .tick-bottom::before { width: 10px; height: 1px; bottom: 0; left: -5px;   }
 .tick-bottom::after  { width: 1px;  height: 6px; bottom: 0; left: -0.5px; }
 
-.tick-left   { left: -1px; top: 50%; transform: translateY(-50%); }
+.tick-left   { left: -1px;   top: 50%; transform: translateY(-50%); }
 .tick-left::before  { width: 1px; height: 10px; left: 0; top: -5px;   }
 .tick-left::after   { width: 6px; height: 1px;  left: 0; top: -0.5px; }
 
-.tick-right  { right: -1px; top: 50%; transform: translateY(-50%); }
+.tick-right  { right: -1px;  top: 50%; transform: translateY(-50%); }
 .tick-right::before { width: 1px; height: 10px; right: 0; top: -5px;   }
 .tick-right::after  { width: 6px; height: 1px;  right: 0; top: -0.5px; }
 
@@ -175,8 +181,8 @@
 .animate-bounce { animation: bounce 2s infinite; }
 @keyframes bounce {
   0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
-  40% { transform: translateX(-50%) translateY(-10px); }
-  60% { transform: translateX(-50%) translateY(-5px); }
+  40%  { transform: translateX(-50%) translateY(-10px); }
+  60%  { transform: translateX(-50%) translateY(-5px);  }
 }
 .mouse {
   width: 26px;
@@ -197,85 +203,36 @@
   animation: scrollWheel 1.5s infinite;
 }
 @keyframes scrollWheel {
-  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0);    }
   100% { opacity: 0; transform: translateX(-50%) translateY(14px); }
 }
 
 /* =========================
    Entrance animations
    ========================= */
-.animate-fade-in {
-  opacity: 0;
-  transform: translateY(26px);
-  animation: fadeInUp 0.85s ease forwards;
-}
-.animate-fade-in-delay-1 {
-  opacity: 0;
-  transform: translateY(26px);
-  animation: fadeInUp 0.85s ease 0.15s forwards;
-}
-.animate-fade-in-delay-2 {
-  opacity: 0;
-  transform: translateY(26px);
-  animation: fadeInUp 0.85s ease 0.3s forwards;
-}
-.animate-fade-in-delay-3 {
-  opacity: 0;
-  animation: fadeInUp 0.85s ease 0.45s forwards;
-}
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
-}
+.animate-fade-in           { opacity: 0; transform: translateY(26px); animation: fadeInUp 0.85s ease         forwards; }
+.animate-fade-in-delay-1   { opacity: 0; transform: translateY(26px); animation: fadeInUp 0.85s ease 0.15s  forwards; }
+.animate-fade-in-delay-2   { opacity: 0; transform: translateY(26px); animation: fadeInUp 0.85s ease 0.30s  forwards; }
+.animate-fade-in-delay-3   { opacity: 0;                               animation: fadeInUp 0.85s ease 0.45s  forwards; }
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
 /* =========================
-   Responsive
+   Responsive — uses px breakpoints so zoom
+   doesn't shift breakpoints unexpectedly.
    ========================= */
-
-/* Tablet */
 @media (max-width: 992px) {
-  .hero-headline {
-    font-size: clamp(2.2rem, 6.5vw, 3.6rem);
-  }
+  .hero-headline { font-size: clamp(2rem, calc(var(--vvw, 100vw) * 0.065), 3.6rem); }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
-  .hero-section {
-    padding-top: 90px;
-    min-height: 100svh; /* safe-area aware */
-  }
-
-  .hero-headline {
-    font-size: clamp(1.9rem, 8vw, 2.8rem);
-    line-height: 1.1;
-  }
-
-  .hero-logo-area {
-    width:  clamp(160px, 60vw, 260px);
-    height: clamp(160px, 60vw, 260px);
-    margin-bottom: 3.5rem;
-  }
-
-  .hero-eyebrow {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-  }
-
-  .hero-cta {
-    font-size: 0.78rem;
-    padding: 0.75rem 1.6rem;
-  }
+  .hero-section    { padding-top: 90px; min-height: var(--vvh, 100svh); }
+  .hero-headline   { font-size: clamp(1.7rem, calc(var(--vvw, 100vw) * 0.08), 2.8rem); line-height: 1.1; }
+  .hero-logo-area  { width: clamp(140px, calc(var(--vvw, 100vw) * 0.55), 240px); height: clamp(140px, calc(var(--vvw, 100vw) * 0.55), 240px); margin-bottom: 3.5rem; }
+  .hero-eyebrow    { font-size: 0.65rem; letter-spacing: 0.2em; }
+  .hero-cta        { font-size: 0.78rem; padding: 0.75rem 1.6rem; }
 }
 
-/* Small phones */
 @media (max-width: 480px) {
-  .hero-headline {
-    font-size: clamp(1.6rem, 9vw, 2.2rem);
-  }
-
-  .hero-logo-area {
-    width:  clamp(140px, 55vw, 220px);
-    height: clamp(140px, 55vw, 220px);
-    margin-bottom: 3rem;
-  }
+  .hero-headline   { font-size: clamp(1.4rem, calc(var(--vvw, 100vw) * 0.09), 2.2rem); }
+  .hero-logo-area  { width: clamp(120px, calc(var(--vvw, 100vw) * 0.50), 200px); height: clamp(120px, calc(var(--vvw, 100vw) * 0.50), 200px); margin-bottom: 3rem; }
 }

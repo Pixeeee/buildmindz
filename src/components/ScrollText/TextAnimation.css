@@ -1,0 +1,56 @@
+/* ─── Wrapper ──────────────────────────────────────────────────────────────── */
+.text-animation {
+  display: block;
+}
+
+/* Word-mode: flex row with wrap so long text flows naturally */
+.ta-word-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28em;           /* space between word spans */
+  align-items: baseline;
+}
+
+/* Letter-mode: words sit side by side with a gap, letters are inline */
+.ta-letter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28em;           /* space between whole words */
+  align-items: baseline;
+}
+
+/* Each word group in letter mode — keeps letters of one word together */
+.ta-word {
+  display: inline-flex;  /* letters stay on one baseline */
+  white-space: nowrap;
+}
+
+/* ─── Individual animated unit ─────────────────────────────────────────────── */
+.ta-unit {
+  display: inline-block;
+  opacity: 0;
+  transition:
+    opacity   0.7s ease,
+    filter    0.7s ease,
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── Hidden states per direction ──────────────────────────────────────────── */
+/* up: units start below, slide upward into place */
+.ta-dir-up    .ta-unit { filter: blur(6px); transform: translateY(32px);  }
+
+/* down: units start above, slide downward */
+.ta-dir-down  .ta-unit { filter: blur(6px); transform: translateY(-32px); }
+
+/* left: units start off to the RIGHT, slide leftward (enter from right) */
+.ta-dir-left  .ta-unit { filter: blur(5px); transform: translateX(40px);  }
+
+/* right: units start off to the LEFT, slide rightward (enter from left) */
+.ta-dir-right .ta-unit { filter: blur(5px); transform: translateX(-40px); }
+
+/* ─── Visible — added by IntersectionObserver ───────────────────────────────  */
+.text-animation.ta-visible .ta-unit {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translate(0, 0);
+}

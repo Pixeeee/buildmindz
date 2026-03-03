@@ -1,0 +1,246 @@
+/* ─────────────────────────────────────────────
+   SECTION
+───────────────────────────────────────────── */
+.scroll-text-section {
+  position: relative;
+  width: 100%;
+  background: #fafaf9;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────
+   THREADS — sticky behind all panels
+───────────────────────────────────────────── */
+.st-threads-bg {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  z-index: 0;
+  margin-bottom: -100vh;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* ─────────────────────────────────────────────
+   DIVIDER — thin rule between panels
+───────────────────────────────────────────── */
+.st-divider {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.07);
+  margin: 0 auto;
+}
+
+/* ─────────────────────────────────────────────
+   BASE PANEL
+───────────────────────────────────────────── */
+.st-panel {
+  position: relative;
+  z-index: 1;
+  min-height: 88vh;
+  display: flex;
+  align-items: center;
+  padding: clamp(4rem, 8vw, 10rem) clamp(2rem, 7vw, 10rem);
+  box-sizing: border-box;
+}
+
+/* ─────────────────────────────────────────────
+   HERO PANEL — centred, large
+───────────────────────────────────────────── */
+.st-panel--hero {
+  min-height: 100vh;
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding-bottom: clamp(4rem, 8vh, 8rem);
+}
+
+.st-panel-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* ─────────────────────────────────────────────
+   CLOSING PANEL
+───────────────────────────────────────────── */
+.st-panel--closing {
+  min-height: 80vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.st-panel--closing .st-panel-inner {
+  align-items: center;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────
+   SPLIT PANELS
+───────────────────────────────────────────── */
+.st-panel--split {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(2rem, 6vw, 8rem);
+}
+
+/* ─────────────────────────────────────────────
+   SECTION NUMBER LABEL
+───────────────────────────────────────────── */
+.st-label {
+  display: block;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: rgba(0, 0, 0, 0.28);
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.st-label--right {
+  text-align: right;
+}
+
+/* ─────────────────────────────────────────────
+   TEXT GROUPS
+───────────────────────────────────────────── */
+.st-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.st-split-text {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
+.st-split-text--right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.st-split-text--left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* ─────────────────────────────────────────────
+   IMAGE COLUMN
+───────────────────────────────────────────── */
+.st-split-image {
+  flex: 0 0 auto;
+  width: clamp(160px, 32vw, 460px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-brain-img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.08));
+}
+
+/* ─────────────────────────────────────────────
+   REVEAL IMAGE — scroll-triggered entrance
+───────────────────────────────────────────── */
+.ri-base {
+  opacity: 0;
+  transition:
+    opacity   1s   ease,
+    filter    1s   ease,
+    transform 1s   cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.1s;
+}
+
+.ri-dir-left  { filter: blur(4px); transform: translateX(48px);  }
+.ri-dir-right { filter: blur(4px); transform: translateX(-48px); }
+.ri-dir-up    { filter: blur(4px); transform: translateY(36px);  }
+.ri-dir-down  { filter: blur(4px); transform: translateY(-36px); }
+
+.ri-base.ri-visible {
+  opacity: 1;
+  filter: blur(0px) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.08));
+  transform: translate(0, 0);
+}
+
+/* ─────────────────────────────────────────────
+   TYPOGRAPHY
+───────────────────────────────────────────── */
+.st-headline {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(3rem, 7vw, 7.5rem);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  color: #0a0a0a;
+  max-width: 860px;
+  margin: 0;
+}
+
+.st-subhead {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(1.6rem, 3.2vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: rgba(0, 0, 0, 0.88);
+  margin: 0;
+  max-width: 560px;
+}
+
+.st-body {
+  font-family: 'Didot', Georgia, serif;
+  font-size: clamp(1.4rem, 2.8vw, 3rem);
+  font-weight: 400;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.80);
+  margin: 0;
+  max-width: 520px;
+}
+
+.st-closing {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: clamp(0.9rem, 1.4vw, 1.3rem);
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+  margin: 0;
+  max-width: 700px;
+}
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .st-split-image { width: clamp(140px, 30vw, 300px); }
+  .st-subhead     { font-size: clamp(1.3rem, 3.2vw, 2.6rem); }
+  .st-body        { font-size: clamp(1.2rem, 2.8vw, 2.2rem); }
+}
+
+@media (max-width: 680px) {
+  .st-panel {
+    min-height: 60vh;
+    padding: 3rem 1.5rem;
+  }
+  .st-panel--hero    { min-height: 80vh; align-items: flex-end; }
+  .st-panel--split   { flex-direction: row !important; gap: 1.5rem; }
+  .st-split-image    { width: clamp(100px, 38vw, 180px); flex-shrink: 0; }
+  .st-headline       { font-size: clamp(2.2rem, 8vw, 3.5rem); }
+  .st-subhead,
+  .st-body           { font-size: clamp(1rem, 4vw, 1.5rem); }
+  .st-closing        { font-size: clamp(0.7rem, 2.5vw, 1rem); }
+}
+
+@media (max-width: 420px) {
+  .st-panel          { padding: 2.5rem 1rem; }
+  .st-split-image    { width: clamp(80px, 36vw, 140px); }
+}

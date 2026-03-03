@@ -1,30 +1,117 @@
-/* =========================
-   HorizontalSection
-   ========================= */
+/* =============================================================================
+   HorizontalSection.css
+   -----------------------------------------------------------------------------
+   Section height is set by JS via visualViewport — never use 100vh internally.
+   Panel widths use var(--vvw), also set by JS, so they are correct at any zoom.
+   ============================================================================= */
+
+/* =============================================================================
+   Section shell
+   ============================================================================= */
+
 .horizontal-section {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 100vh;    /* fallback — JS overrides with visualViewport height */
   overflow: hidden;
   z-index: 1;
-  background: #ffffff;
+
+  /*
+   * Rich layered aurora wash pulled from the card palette.
+   * Each stop is deliberately faint (<= 0.06 opacity) so the canvas lines
+   * read clearly against it without competing.
+   */
+  background:
+    radial-gradient(ellipse 80% 60% at 12% 30%,  rgba(255,  0, 136, 0.055) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 70% at 85% 20%,  rgba( 13, 99, 248, 0.060) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 55% at 50% 90%,  rgba(153, 17, 255, 0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 40% at 92% 75%,  rgba( 12,220, 247, 0.045) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 50% at 28% 80%,  rgba(221,  0, 238, 0.038) 0%, transparent 55%),
+    #fafafa;
 }
 
-/* =========================
-   Lines canvas
-   ========================= */
+/* =============================================================================
+   Ambient orbs (pure CSS)
+   Two soft blurred glows that slowly drift, adding depth without JS.
+   ============================================================================= */
+
+.horizontal-section::before,
+.horizontal-section::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(80px);
+  /* Keep orb animation on its own compositor layer */
+  will-change: transform;
+}
+
+.horizontal-section::before {
+  width: 520px;
+  height: 520px;
+  top: -10%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(255, 0, 136, 0.09) 0%, transparent 70%);
+  animation: orbDrift1 18s ease-in-out infinite alternate;
+}
+
+.horizontal-section::after {
+  width: 420px;
+  height: 420px;
+  bottom: -12%;
+  right: 5%;
+  background: radial-gradient(circle, rgba(12, 220, 247, 0.08) 0%, transparent 70%);
+  animation: orbDrift2 22s ease-in-out infinite alternate;
+}
+
+@keyframes orbDrift1 {
+  from { transform: translate(0,     0)    scale(1);    }
+  to   { transform: translate(60px, 40px)  scale(1.15); }
+}
+
+@keyframes orbDrift2 {
+  from { transform: translate(0,      0)    scale(1);   }
+  to   { transform: translate(-50px, -30px) scale(1.1); }
+}
+
+/* =============================================================================
+   Grain overlay
+   Adds tactile texture at very low opacity (0.028) — felt, not seen.
+   ============================================================================= */
+
+.hs-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+}
+
+/* =============================================================================
+   Canvas
+   Sits above the background (z-index 1) but below the track content (z-index 2).
+   CSS sets display dimensions; JS sets the actual pixel buffer on resize.
+   ============================================================================= */
+
 .hs-lines-canvas {
   position: absolute;
   inset: 0;
-  width: 100% !important;
+  width: 100% !important;   /* override any inline size set by the canvas API */
   height: 100% !important;
   pointer-events: none;
   z-index: 1;
 }
 
-/* =========================
+/* =============================================================================
    Track
-   ========================= */
+   The horizontally sliding container. transform is driven by JS.
+   The 60 ms transition softens wheel-tick stepping without adding lag.
+   ============================================================================= */
+
 .hs-track {
   position: relative;
   z-index: 2;
@@ -37,37 +124,45 @@
   transition: transform 0.06s linear;
 }
 
-/* =========================
+/* =============================================================================
    Generic panel
-   ========================= */
+   var(--vvw) is set by JS; 100vw is the CSS fallback.
+   ============================================================================= */
+
 .hs-panel {
   flex-shrink: 0;
-  width: 100vw;
+  width: var(--vvw, 100vw);
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* =========================
-   Values Panel
-   ========================= */
+/* =============================================================================
+   Values panel
+   ============================================================================= */
+
 .values-panel {
   position: relative;
   background: transparent;
 }
 
+/*
+ * Soft right-edge fade so the first card peeks through as the user scrolls.
+ */
 .values-panel::after {
   content: "";
   position: absolute;
-  top: 0; right: 0;
+  top: 0;
+  right: 0;
   width: 140px;
   height: 100%;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.75));
+  background: linear-gradient(to right, transparent, rgba(250, 250, 250, 0.82));
   pointer-events: none;
   z-index: 3;
 }
 
+/* Animated in when JS adds .section-active to the section element */
 .values-inner {
   position: relative;
   z-index: 4;
@@ -75,9 +170,20 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem 2rem 3rem;
+  padding: clamp(130px, 18vw, 230px) 2rem 2rem;
   max-width: 600px;
   width: 100%;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity   0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.horizontal-section.section-active .values-inner {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .values-eyebrow {
@@ -90,13 +196,20 @@
 }
 
 .values-headline {
-  font-family: 'Didot', Georgia, serif;
-  font-size: clamp(1.8rem, 3.6vw, 3.6rem);
+  font-family: "Didot", Georgia, serif;
+  font-size: clamp(1.6rem, 3.6cqw, 3.6rem);
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: #0a0a0a;
   margin: 0 0 1.6rem;
+}
+
+/* Fallback for browsers without container-query length units */
+@supports not (font-size: 1cqw) {
+  .values-headline {
+    font-size: clamp(1.6rem, 3.6vw, 3.6rem);
+  }
 }
 
 .values-hint {
@@ -114,25 +227,34 @@
   50%       { opacity: 1;   transform: translateX(8px); }
 }
 
-/* =========================
-   Cards Panel — generous gap between cards
-   ========================= */
+/* =============================================================================
+   Cards panel
+   ============================================================================= */
+
 .cards-panel {
+  /*
+   * Override the .hs-panel width: this panel grows to fit its cards rather
+   * than being pinned to viewport width.
+   */
   width: auto;
   display: flex;
   align-items: center;
-  gap: 48px;                                     /* ← gap between cards */
-  padding: 0 clamp(40px, 8vw, 120px);            /* breathing room on both ends */
+  gap: 48px;
+  padding: 0 clamp(40px, 8vw, 120px);
   background: transparent;
+  /* Reset list styles — semantic role="list" is handled in JSX */
+  list-style: none;
+  margin: 0;
 }
 
-/* =========================
+/* =============================================================================
    Gallery card
-   ========================= */
+   ============================================================================= */
+
 .gallery-item {
   flex-shrink: 0;
-  width: 400px;
-  height: 500px;
+  width: clamp(220px, 28vw, 400px);
+  height: clamp(280px, 36vw, 500px);
   border-radius: 20px;
   position: relative;
   overflow: hidden;
@@ -140,21 +262,48 @@
   background-size: cover;
   background-position: center;
   cursor: pointer;
-  transition: transform 0.38s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-              box-shadow 0.38s ease;
   outline: none;
+
+  /* Enter animation — triggered by JS adding .in-view */
+  opacity: 0;
+  transform: translateX(60px) scale(0.96);
+  transition:
+    opacity    0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform  0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.38s ease;
+
+  /* Per-card palette-hued ambient glow */
+  filter: drop-shadow(0 0 28px color-mix(in srgb, var(--item-color) 22%, transparent));
 }
 
-.gallery-item:hover {
+/* Stagger the reveal for a left-to-right cascade effect */
+.gallery-item:nth-child(1) { transition-delay: 0s;    }
+.gallery-item:nth-child(2) { transition-delay: 0.08s; }
+.gallery-item:nth-child(3) { transition-delay: 0.16s; }
+.gallery-item:nth-child(4) { transition-delay: 0.08s; }
+.gallery-item:nth-child(5) { transition-delay: 0.16s; }
+
+.gallery-item.in-view {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+.gallery-item.in-view:hover {
   transform: translateY(-10px) scale(1.025);
-  box-shadow: 0 32px 72px rgba(0, 0, 0, 0.26);
+  box-shadow:
+    0 32px 72px rgba(0, 0, 0, 0.22),
+    0 0   48px color-mix(in srgb, var(--item-color) 28%, transparent);
+  filter: drop-shadow(0 0 36px color-mix(in srgb, var(--item-color) 35%, transparent));
 }
 
+/* Keyboard focus ring — more accessible than the default browser outline */
 .gallery-item:focus-visible {
-  box-shadow: 0 0 0 3px var(--item-color), 0 24px 56px rgba(0,0,0,0.2);
+  box-shadow:
+    0 0 0 3px var(--item-color),
+    0 24px 56px rgba(0, 0, 0, 0.2);
 }
 
-/* Gradient overlay */
+/* Colour overlay that deepens on hover to improve text legibility */
 .gallery-item::before {
   content: "";
   position: absolute;
@@ -164,22 +313,25 @@
   mix-blend-mode: multiply;
   transition: opacity 0.3s ease;
 }
-.gallery-item:hover::before { opacity: 0.88; }
 
-/* Shine sweep on hover */
+.gallery-item:hover::before {
+  opacity: 0.88;
+}
+
+/* Shine sweep — pure decoration, fires once per hover entry */
 .item-shine {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     115deg,
     transparent 40%,
-    rgba(255,255,255,0.12) 50%,
+    rgba(255, 255, 255, 0.12) 50%,
     transparent 60%
   );
   transform: translateX(-100%);
-  transition: transform 0s;
   pointer-events: none;
 }
+
 .gallery-item:hover .item-shine {
   transform: translateX(100%);
   transition: transform 0.55s ease;
@@ -201,16 +353,17 @@
   margin-bottom: 6px;
   font-weight: 700;
   letter-spacing: 0.14em;
+  /* Boost brightness so the number reads against dark overlays */
   filter: brightness(1.8);
 }
 
 .gallery-item h3 {
-  font-size: 20px;
+  font-size: clamp(14px, 1.6vw, 20px);
   font-weight: 700;
   color: #fff;
   margin: 0 0 8px;
   line-height: 1.25;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   max-width: 280px;
 }
 
@@ -220,10 +373,12 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255, 255, 255, 0.65);
   opacity: 0;
   transform: translateY(4px);
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity   0.25s ease,
+    transform 0.25s ease;
 }
 
 .gallery-item:hover .item-expand-hint {
@@ -231,175 +386,402 @@
   transform: translateY(0);
 }
 
-/* =========================
+/* =============================================================================
    Modal backdrop
-   ========================= */
+   ============================================================================= */
+
 .card-modal-backdrop {
   position: fixed;
   inset: 0;
   z-index: 200;
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  animation: backdropIn 0.3s ease;
+  animation: backdropFade 0.4s ease both;
 }
 
-@keyframes backdropIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+@keyframes backdropFade {
+  from { opacity: 0; backdrop-filter: blur(0);    }
+  to   { opacity: 1; backdrop-filter: blur(10px); }
 }
 
-/* =========================
-   Modal card
-   ========================= */
+/* =============================================================================
+   Modal
+   ============================================================================= */
+
 .card-modal {
-  background: #fff;
+  background: #ffffff;
+  border-radius: 32px;
+  width: 100%;
+  max-width: 1000px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.25);
+  animation: modalSlideUp 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+/* Left column — image */
+.modal-image-container {
+  flex: 1.2;
+  position: relative;
+  background: linear-gradient(145deg, var(--modal-color, #000), #1a1a1a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 400px;
+}
+
+.modal-image-frame {
+  width: 100%;
+  height: 100%;
   border-radius: 24px;
   overflow: hidden;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
+  background: #ffffff;
+  aspect-ratio: 1 / 1;
+  position: relative;
+}
+
+.modal-image {
   width: 100%;
-  max-width: 680px;
-  max-height: 90vh;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.modal-image-container:hover .modal-image {
+  transform: scale(1.05);
+}
+
+.modal-image-number {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  padding: 0.4rem 1rem;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 2;
+}
+
+/* Right column — content */
+.modal-content {
+  flex: 1;
+  padding: 3rem;
+  overflow-y: auto;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.4);
-  animation: modalIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.88) translateY(24px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    }
-}
-
-/* Modal hero image */
-.modal-image {
   position: relative;
-  width: 100%;
-  height: clamp(200px, 40vh, 320px);
-  background-size: cover;
-  background-position: center;
-  flex-shrink: 0;
-}
-
-.modal-image-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 40%,
-    var(--modal-color, #000) 100%
-  );
-  opacity: 0.65;
-  mix-blend-mode: multiply;
 }
 
 /* Close button */
 .modal-close {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 2;
-  width: 36px;
-  height: 36px;
+  top: 1.5rem;
+  right: 1.5rem;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.9);
-  color: #0a0a0a;
-  font-size: 14px;
-  font-weight: 700;
+  background: rgba(0, 0, 0, 0.03);
+  color: #666;
+  font-size: 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-.modal-close:hover { background: #fff; transform: scale(1.1); }
-
-/* Card number inside modal */
-.modal-number {
-  position: absolute;
-  bottom: 20px;
-  left: 24px;
-  z-index: 2;
-  font-size: 11px;
-  font-family: monospace;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--modal-color, #fff);
-  filter: brightness(1.8);
+  transition:
+    background 0.2s ease,
+    color      0.2s ease,
+    transform  0.2s ease;
+  z-index: 3;
 }
 
-/* Modal text body */
-.modal-body {
-  padding: 2rem 2rem 2.4rem;
-  overflow-y: auto;
+.modal-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #000;
+  transform: rotate(90deg);
+}
+
+/* Keyboard focus ring for the close button (receives focus first via JS) */
+.modal-close:focus-visible {
+  outline: 2px solid var(--modal-color, #000);
+  outline-offset: 2px;
+}
+
+.modal-category {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--modal-color, #000);
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--modal-color, #000);
+  width: fit-content;
 }
 
 .modal-title {
-  font-family: 'Didot', Georgia, serif;
-  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-family: "Didot", Georgia, serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
   font-weight: 800;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.02em;
   color: #0a0a0a;
-  margin: 0 0 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.modal-divider {
+  width: 60px;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 1rem 0 1.5rem;
 }
 
 .modal-description {
-  font-size: 0.97rem;
-  line-height: 1.72;
+  font-size: 1rem;
+  line-height: 1.8;
   color: #555;
-  margin: 0 0 1.6rem;
+  margin: 0 0 2rem;
+  font-weight: 400;
 }
 
-/* Tags */
+/*
+ * Tags — was div > span, now ul > li for semantic correctness.
+ * List style is reset; visual appearance is unchanged.
+ */
 .modal-tags {
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .modal-tag {
   display: inline-block;
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--modal-color, #888);
-  color: var(--modal-color, #888);
-  font-size: 0.72rem;
-  font-weight: 700;
+  padding: 0.4rem 1.2rem;
+  border-radius: 40px;
+  background: rgba(0, 0, 0, 0.02);
+  color: #444;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition:
+    background   0.2s ease,
+    color        0.2s ease,
+    border-color 0.2s ease;
+}
+
+.modal-tag:hover {
+  background: var(--modal-color, #000);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* CTA button */
+.modal-cta {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 2rem;
+  background: transparent;
+  border: 1.5px solid #0a0a0a;
+  border-radius: 40px;
+  font-size: 0.85rem;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  color: #0a0a0a;
+  cursor: pointer;
+  width: fit-content;
+  transition:
+    background 0.3s ease,
+    color      0.3s ease,
+    gap        0.3s ease;
 }
 
-/* =========================
-   Responsive — tablet ≤ 768px
-   ========================= */
+.modal-cta:hover {
+  background: #0a0a0a;
+  color: #ffffff;
+  gap: 1rem;
+}
+
+.modal-cta:focus-visible {
+  outline: 2px solid var(--modal-color, #000);
+  outline-offset: 3px;
+}
+
+.modal-cta-arrow {
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.modal-cta:hover .modal-cta-arrow {
+  transform: translateX(4px);
+}
+
+/* =============================================================================
+   Responsive — Modal
+   ============================================================================= */
+
 @media (max-width: 768px) {
-  .values-headline { font-size: clamp(1.6rem, 7vw, 2.6rem); }
+  .card-modal {
+    flex-direction: column;
+    max-height: 90vh;
+    border-radius: 24px;
+  }
 
-  .cards-panel { gap: 28px; padding: 0 28px; }
+  .modal-image-container {
+    flex: none;
+    min-height: 250px;
+    padding: 1.5rem;
+  }
 
-  .gallery-item { width: 280px; height: 360px; border-radius: 14px; }
-  .gallery-item h3 { font-size: 17px; max-width: 220px; }
-  .item-content { bottom: 20px; left: 20px; }
+  .modal-image-frame {
+    max-width: 200px;
+    margin: 0 auto;
+  }
 
-  .card-modal { max-width: 100%; border-radius: 20px; }
-  .modal-body { padding: 1.5rem; }
+  .modal-content {
+    padding: 2rem;
+  }
+
+  .modal-title {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-description {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
 }
 
-/* =========================
-   Responsive — phones ≤ 480px
-   ========================= */
 @media (max-width: 480px) {
-  .values-headline { font-size: clamp(1.5rem, 9vw, 2.2rem); }
+  .modal-image-container {
+    min-height: 200px;
+    padding: 1rem;
+  }
 
-  .cards-panel { gap: 20px; padding: 0 20px; }
+  .modal-image-frame {
+    max-width: 160px;
+  }
 
-  .gallery-item { width: 240px; height: 300px; }
-  .gallery-item h3 { font-size: 14px; }
+  .modal-content {
+    padding: 1.5rem;
+  }
 
-  .modal-title { font-size: 1.3rem; }
-  .modal-description { font-size: 0.9rem; }
+  .modal-title {
+    font-size: 1.4rem;
+  }
+
+  .modal-description {
+    font-size: 0.9rem;
+  }
+
+  .modal-cta {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.8rem;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* =============================================================================
+   Reduced motion
+   Respects the OS-level preference. Animations are disabled or replaced with
+   simple opacity fades. No content is hidden — only decorative motion is cut.
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Stop drifting orbs */
+  .horizontal-section::before,
+  .horizontal-section::after {
+    animation: none;
+  }
+
+  /* Stop hint pulse — leave it visible at reduced opacity */
+  .values-hint {
+    animation: none;
+    opacity: 0.7;
+    transform: none;
+  }
+
+  /* Drop translate from the values-inner reveal — fade only */
+  .values-inner {
+    transform: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .horizontal-section.section-active .values-inner {
+    transform: none;
+  }
+
+  /* Drop translate from card enter animation — fade only */
+  .gallery-item {
+    transform: none;
+    transition: opacity 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .gallery-item.in-view {
+    transform: none;
+  }
+
+  .gallery-item.in-view:hover {
+    transform: none;
+  }
+
+  /* Hide purely decorative shine sweep */
+  .item-shine,
+  .gallery-item:hover .item-shine {
+    display: none;
+  }
+
+  /* Disable modal entrance animations */
+  .card-modal-backdrop {
+    animation: none;
+  }
+
+  .card-modal {
+    animation: none;
+  }
+
+  /* No image zoom on hover */
+  .modal-image-container:hover .modal-image {
+    transform: none;
+  }
+
+  /* No close button rotation */
+  .modal-close:hover {
+    transform: none;
+  }
+
+  /* No CTA arrow nudge */
+  .modal-cta:hover .modal-cta-arrow {
+    transform: none;
+  }
 }
