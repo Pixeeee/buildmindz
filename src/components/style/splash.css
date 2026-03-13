@@ -4,15 +4,14 @@
 .splash {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
   overflow: hidden;
-  /* Fade out when leaving */
   opacity: 1;
   transition: opacity 0.6s ease;
   font-family: 'Press Start 2P', sans-serif;
@@ -29,7 +28,6 @@
 .splash-orb {
   position: absolute;
   inset: 0;
-  /* Orb is 100% of the viewport — it centres itself internally */
   z-index: 0;
 }
 
@@ -42,7 +40,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3rem;
+  gap: clamp(1.5rem, 4vh, 3rem);
+  padding: clamp(1rem, 4vw, 2rem);
+  width: 100%;
+  max-width: 100%;
 }
 
 /* =========================
@@ -51,31 +52,43 @@
 .splash-focus-wrap {
   display: flex;
   align-items: baseline;
-  gap: 0.4em;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(0.15em, 1vw, 0.4em);
   text-shadow: 0 0 60px rgba(255, 255, 255, 0.12);
-  
+
+  /* Fluid: ~1.8rem on tiny phones → ~8rem on wide screens */
+  font-size: clamp(1.8rem, 9vw, 8rem);
+  letter-spacing: clamp(0.03em, 0.5vw, 0.12em);
+
+  /* Never overflow the viewport */
+  max-width: 100%;
+  word-break: keep-all;
+  white-space: nowrap;
 }
 
 /* =========================
-   Dive In button — preserved from original
+   Dive In button
    ========================= */
 .splash-button {
-  padding: 1em 2.4em;
+  padding: clamp(0.6em, 1.5vh, 1em) clamp(1.2em, 3vw, 2.4em);
   border: none;
   border-radius: 5px;
+  font-family: 'Press Start 2P', sans-serif;
   font-weight: bold;
-  letter-spacing: 5px;
+  letter-spacing: clamp(2px, 0.4vw, 5px);
   text-transform: uppercase;
   cursor: pointer;
   color: #a9bbbe;
   transition: all 800ms;
-  font-size: 15px;
+  font-size: clamp(9px, 1.2vw, 15px);
   position: relative;
   overflow: hidden;
   outline: 2px solid #929b9c;
   background: transparent;
   opacity: 0;
   animation: fadeInButton 0.6s ease 0.4s forwards;
+  white-space: nowrap;
 }
 
 @keyframes fadeInButton {
@@ -86,7 +99,7 @@
   color: #ffffff;
   transform: scale(1.08);
   outline: 2px solid #e3ebed;
-  box-shadow: 4px 5px 17px -4px rgba(217,227,228,0.55);
+  box-shadow: 4px 5px 17px -4px rgba(217, 227, 228, 0.55);
 }
 
 .splash-button::before {
@@ -96,7 +109,7 @@
   top: 0;
   width: 0;
   height: 100%;
-  background-color: rgba(41,95,102,0);
+  background-color: rgba(41, 95, 102, 0);
   transform: skewX(45deg);
   z-index: -1;
   transition: width 800ms;
@@ -107,27 +120,50 @@
 }
 
 /* =========================
-   Responsive
+   Landscape phones — text shrinks to fit height
    ========================= */
-@media (max-width: 768px) {
+@media (max-height: 500px) and (orientation: landscape) {
   .splash-focus-wrap {
-    font-size: clamp(2rem, 10vw, 4rem);
-    letter-spacing: 0.08em;
+    font-size: clamp(1.2rem, 7vh, 3.5rem);
   }
-  .splash-button {
-    font-size: 13px;
-    padding: 0.8em 1.6em;
-    letter-spacing: 4px;
+  .splash-content {
+    gap: clamp(0.8rem, 2vh, 1.5rem);
   }
 }
 
-@media (max-width: 480px) {
+/* =========================
+   Very small phones (< 360px wide)
+   ========================= */
+@media (max-width: 359px) {
   .splash-focus-wrap {
-    font-size: clamp(1.6rem, 12vw, 2.8rem);
-    letter-spacing: 0.06em;
+    font-size: clamp(1.4rem, 11vw, 2rem);
+    letter-spacing: 0.02em;
   }
-  .splash-button {
-    font-size: 11px;
-    letter-spacing: 3px;
+}
+
+/* =========================
+   Tablets (768px – 1024px)
+   ========================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .splash-focus-wrap {
+    font-size: clamp(4rem, 8vw, 6.5rem);
+  }
+}
+
+/* =========================
+   Large screens / TV (> 1600px)
+   ========================= */
+@media (min-width: 1600px) {
+  .splash-focus-wrap {
+    font-size: clamp(7rem, 8vw, 10rem);
+  }
+}
+
+/* =========================
+   Touch devices — disable hover scale (no jank)
+   ========================= */
+@media (hover: none) {
+  .splash-button:hover {
+    transform: none;
   }
 }
