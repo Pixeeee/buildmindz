@@ -66,9 +66,9 @@ const HeroSection = forwardRef(function HeroSection({ logoAreaRef }, sectionRef)
           WEB3 FORWARD &nbsp;·&nbsp; BUILDMINDZ
         </p>
         <h1 className="hero-headline animate-fade-in-delay-1">
-          Building Up The Filipino<br />
-          Builders For Global<br />
-          Composability.
+          Skill-Maxing <br />
+          The Filipino Builders<br />
+          For Global Composability.
         </h1>
         <a href="#contact" className="hero-cta animate-fade-in-delay-2">
           Get Started <ArrowRight size={18} />

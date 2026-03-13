@@ -70,9 +70,9 @@
 .hero-headline {
   font-family: 'Didot', Georgia, serif;
   /* Use --vvw so font scales correctly at any zoom */
-  font-size: clamp(2rem, calc(var(--vvw, 100vw) * 0.052), 4.8rem);
-  font-weight: 800;
-  line-height: 1.07;
+  font-size: clamp(2rem, calc(var(--vvw, 50vw) * 0.02), 4rem);
+  font-weight: 500;
+  line-height: 1;
   letter-spacing: -0.02em;
   color: var(--hero-text);
   margin: 0 0 2rem;
@@ -113,7 +113,7 @@
   width:  clamp(160px, calc(var(--vvw, 100vw) * 0.30), 340px);
   height: clamp(160px, calc(var(--vvw, 100vw) * 0.30), 340px);
   flex-shrink: 0;
-  margin-bottom: 4rem;
+  margin-bottom: 10rem;
 }
 
 /* =========================

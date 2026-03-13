@@ -7,7 +7,6 @@ const clamp     = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 const lerp      = (a, b, t)   => a + (b - a) * t;
 const easeInOut = (t) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
-// ─── Viewport helper ─────────────────────────────────────────────
 const vp = () => {
   const vv = window.visualViewport;
   return {
@@ -34,14 +33,14 @@ const ScrollingLogo = ({ heroRef, valuesRef, logoAreaRef, hxPosRef }) => {
 
       const { width: vw } = vp();
 
-      // ── Logo size (define BEFORE using it) ─────────────────────
+      // ── Logo size ──────────────────────────────────────────────────────────
       const logoSize = clamp(vw * 0.22, 140, 300);
 
-      // ── Scroll progress ─────────────────────────────────────────
+      // ── Scroll progress ────────────────────────────────────────────────────
       const raw  = clamp(-hero.top / hero.height, 0, 1);
       const ease = easeInOut(raw);
 
-      // ── Vertical position ───────────────────────────────────────
+      // ── Vertical position (original) ───────────────────────────────────────
       const startY = logoArea.top + logoArea.height * 0.5;
 
       const landingScale = 0.72;
@@ -51,24 +50,43 @@ const ScrollingLogo = ({ heroRef, valuesRef, logoAreaRef, hxPosRef }) => {
 
       const logoY = lerp(startY, endY, ease);
 
-      // ── Arrival state ───────────────────────────────────────────
+      // ── Arrival state ──────────────────────────────────────────────────────
       if (raw >= 0.999) arrivedRef.current = true;
       if (raw < 0.05)   arrivedRef.current = false;
 
-      // ── Horizontal position ─────────────────────────────────────
+      // ── Horizontal position (original) ────────────────────────────────────
       const hx    = hxPosRef.current ?? 0;
       const leftX = arrivedRef.current
         ? vw / 2 + hx
         : vw / 2;
 
-      // ── Scale animation ─────────────────────────────────────────
+      // ── Scale animation (original) ────────────────────────────────────────
       const journeyScale = lerp(1, 0.72, ease);
 
-      // ── Visibility ──────────────────────────────────────────────
+      // ── Opacity ────────────────────────────────────────────────────────────
+      // Original: visible during hero travel, hidden when section gone.
+      // New: once pinned, fade OUT during the delay window (before cards move),
+      // then stay gone. Fade IN on scroll-up naturally as stProgress decreases.
+      // hxPosRef.stProgress is written each frame by HorizontalSection's GSAP
+      // onUpdate — it's 0 at pin start and 1 at pin end.
+      // The delay occupies ~1/7th of total scroll, so delayFrac = 1/7.
       const sectionGone = values.bottom < 0;
-      const opacity     = sectionGone ? 0 : 1;
+      let opacity;
 
-      // ── Apply styles ────────────────────────────────────────────
+      if (sectionGone) {
+        opacity = 0;
+      } else if (!arrivedRef.current) {
+        // Hero phase — original behaviour, fully visible
+        opacity = 1;
+      } else {
+        // Pinned phase — fade out across the delay window then stay at 0
+        const stProgress    = hxPosRef.stProgress ?? 0;
+        const delayFrac     = 1 / 7;
+        const delayProgress = clamp(stProgress / delayFrac, 0, 1);
+        opacity = 1 - delayProgress;
+      }
+
+      // ── Apply (original) ──────────────────────────────────────────────────
       wrap.style.width     = `${logoSize}px`;
       wrap.style.height    = `${logoSize}px`;
       wrap.style.top       = `${logoY}px`;
@@ -77,6 +95,7 @@ const ScrollingLogo = ({ heroRef, valuesRef, logoAreaRef, hxPosRef }) => {
       wrap.style.transform = `translate(-50%, -50%) scale(${journeyScale})`;
       wrap.classList.toggle("glowing", raw > 0.55);
 
+      // ── Logo swap (original) ──────────────────────────────────────────────
       const logo1El = wrap.querySelector(".sl-logo1");
       const logo2El = wrap.querySelector(".sl-logo2");
       const ringEl  = wrap.querySelector(".sl-glow-ring");

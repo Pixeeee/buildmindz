@@ -185,8 +185,8 @@ export default function ContactSection() {
 
       {/* ── Headline ── */}
       <h2 className={"cs-headline" + (wrapVisible ? " cs-reveal" : "")}>
-        Let's build<br />
-        <em>something remarkable.</em>
+        How can we build<br />
+        <em>TOGETHER</em>
       </h2>
 
       {/* ── Contact split ── */}

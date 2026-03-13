@@ -1,4 +1,28 @@
-/* eslint-disable react-hooks/immutability */
+
+/**
+ * HorizontalSection — GSAP ScrollTrigger (fully GSAP-driven, no RAF reveal)
+ *
+ * Architecture:
+ *  ┌─ wrapperRef (tall div, height = vh + horizontal distance) ──────────────┐
+ *  │  ScrollTrigger pins this div. Its height is the "scroll room".          │
+ *  │                                                                          │
+ *  │  ┌─ sectionRef (.horizontal-section, height:100vh, overflow:hidden) ──┐ │
+ *  │  │   ┌─ trackRef (.hs-track, flex row, width = N×vw) ──────────────┐  │ │
+ *  │  │   │  Panel 0: Values text (GSAP stagger reveal)                  │  │ │
+ *  │  │   │  Panels 1-5: Card panels                                     │  │ │
+ *  │  │   └──────────────────────────────────────────────────────────────┘  │ │
+ *  │  └──────────────────────────────────────────────────────────────────────┘ │
+ *  └──────────────────────────────────────────────────────────────────────────┘
+ *
+ * Text reveal:
+ *   GSAP timeline on a dedicated ScrollTrigger that fires BEFORE the main
+ *   horizontal pin. start:"top 85%" end:"top 5%" — so the text animates in
+ *   as the section approaches from below. The horizontal pin starts only at
+ *   "top top", so there's no conflict.
+ *
+ * Install: npm install gsap
+ */
+
 import {
   forwardRef,
   useEffect,
@@ -7,6 +31,8 @@ import {
   useCallback,
   useState,
 } from "react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import "./HorizontalSection.css";
 
 import image1 from "../../assets/images/image1.jpg";
@@ -14,58 +40,53 @@ import image2 from "../../assets/images/image2.jpg";
 import image3 from "../../assets/images/image3.png";
 import image4 from "../../assets/images/image4.png";
 import image5 from "../../assets/images/image5.png";
+gsap.registerPlugin(ScrollTrigger);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CARDS = [
   {
-    id: 1,
-    color: "#ff0088",
-    label: "Build Scalable Web3 Solutions",
+    color: "#0026ff",
+    label: "Government Duo",
     image: image1,
     description:
-      "We architect decentralized infrastructures from the ground up — smart contracts, layer-2 integrations, and protocol design that handles millions of transactions without breaking a sweat.",
-    tags: ["Smart Contracts", "Layer-2", "Protocol Design"],
+      "Strategic partnerships between government institutions and innovation leaders to accelerate digital transformation, policy development, and national technology initiatives.",
+    tags: ["Public Sector", "Innovation", "Policy"],
   },
   {
-    id: 2,
-    color: "#dd00ee",
-    label: "Empower Decentralized Communities",
+    color: "#0026ff",
+    label: "Empowers Universities",
     image: image2,
     description:
-      "Governance models, DAO frameworks, and community tooling that put power back into the hands of builders. We believe Web3 is nothing without the people who drive it.",
-    tags: ["DAO", "Governance", "Community"],
+      "Collaborating with universities to advance research, develop talent, and equip the next generation of technologists with cutting-edge tools and knowledge.",
+    tags: ["Research", "Education", "Talent"],
   },
   {
-    id: 3,
-    color: "#9911ff",
-    label: "Innovate with Blockchain Technology",
+    color: "#0026ff",
+    label: "Emerging Tech Pioneers",
     image: image3,
     description:
-      "From zero-knowledge proofs to cross-chain bridges, we stay ahead of the curve so you don't have to. Innovation isn't a buzzword here — it's the baseline.",
-    tags: ["ZK Proofs", "Cross-chain", "R&D"],
+      "Exploring and building solutions with emerging technologies such as AI, blockchain, and advanced computing to shape the future of digital ecosystems.",
+    tags: ["AI", "Blockchain", "Innovation"],
   },
   {
-    id: 4,
-    color: "#0d63f8",
-    label: "Create Secure Smart Contracts",
+    color: "#0026ff",
+    label: "Backed by Communities",
     image: image4,
     description:
-      "Audited, battle-tested, and built for edge cases. Our security-first approach means every line of Solidity is reviewed for vulnerabilities before it ever touches mainnet.",
-    tags: ["Audit", "Solidity", "Security"],
+      "Driven by passionate communities that collaborate, contribute, and support the growth of open innovation and decentralized technology movements.",
+    tags: ["Community", "Collaboration", "Open Tech"],
   },
   {
-    id: 5,
-    color: "#0cdcf7",
-    label: "Drive Web3 Adoption",
+    color: "#0026ff",
+    label: "Multi-disciplinary",
     image: image5,
     description:
-      "Education, onboarding flows, and developer tooling that lower the barrier to entry. We're building the bridge between Web2 curiosity and Web3 confidence.",
-    tags: ["Onboarding", "Education", "Dev Tools"],
+      "A diverse network of experts across technology, research, policy, and design working together to create holistic solutions for complex challenges.",
+    tags: ["Technology", "Research", "Design"],
   },
 ];
 
-// Mirrors CARD colors as [r, g, b] for gradient interpolation in the canvas.
 const PALETTE = [
   [255,   0, 136],
   [221,   0, 238],
@@ -77,26 +98,14 @@ const PALETTE = [
 const NODE_COUNT   = 55;
 const CONNECT_DIST = 220;
 
-// ─── visualViewport helpers ───────────────────────────────────────────────────
-//
-// Always read the REAL rendered size. At zoom ≠ 100%, window.innerWidth stays
-// fixed to the CSS-pixel layout viewport, while visualViewport.width correctly
-// reflects the narrower visual viewport. Using innerWidth for --vvw or section
-// height causes panels to be sized for the layout viewport instead of what is
-// actually visible, producing misaligned layouts at any non-100% zoom level.
-//
-const vvWidth  = () => window.visualViewport?.width  ?? window.innerWidth;
-const vvHeight = () => window.visualViewport?.height ?? window.innerHeight;
+// ─── Canvas palette helper ────────────────────────────────────────────────────
 
-// ─── Canvas helpers ───────────────────────────────────────────────────────────
-
-/** Linearly interpolate a colour from PALETTE at a given world-x position. */
-function samplePaletteColor(wx, worldWidth) {
-  const t      = Math.max(0, Math.min(1, wx / worldWidth));
-  const scaled = t * (PALETTE.length - 1);
-  const lo     = Math.floor(scaled);
-  const hi     = Math.min(lo + 1, PALETTE.length - 1);
-  const f      = scaled - lo;
+function palColor(wx, worldW) {
+  const t  = Math.max(0, Math.min(1, wx / worldW));
+  const s  = t * (PALETTE.length - 1);
+  const lo = Math.floor(s);
+  const hi = Math.min(lo + 1, PALETTE.length - 1);
+  const f  = s - lo;
   const [ar, ag, ab] = PALETTE[lo];
   const [br, bg, bb] = PALETTE[hi];
   return [
@@ -106,32 +115,20 @@ function samplePaletteColor(wx, worldWidth) {
   ];
 }
 
-// ─── Hook: scroll-synced interconnecting lines ────────────────────────────────
+// ─── Node-graph canvas hook ───────────────────────────────────────────────────
 
-/**
- * Renders an animated node-graph on `canvasRef`.
- * Nodes live in a world 5× the canvas width; `xPosRef` pans them in sync
- * with the horizontal scroll position so lines appear world-anchored.
- *
- * Both args are stable refs — intentionally omitted from the dep array.
- */
-function useInterconnectLines(canvasRef, xPosRef) {
+function useNodeGraph(canvasRef, xPosRef) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
-    let nodes = [];
-    let W = 0, H = 0;
-    let lastX = 0;
-    let raf;
+    let nodes = [], W = 0, H = 0, lastX = 0, raf;
 
-    const buildNodes = () => {
-      W = canvas.width;
-      H = canvas.height;
-      const worldW = W * 5;
+    const build = () => {
+      W = canvas.width; H = canvas.height;
+      const wW = W * 7;
       nodes = Array.from({ length: NODE_COUNT }, () => ({
-        wx: Math.random() * worldW,
+        wx: Math.random() * wW,
         y:  Math.random() * H,
         vx: (Math.random() - 0.5) * 0.35,
         vy: (Math.random() - 0.5) * 0.22,
@@ -141,101 +138,72 @@ function useInterconnectLines(canvasRef, xPosRef) {
     const resize = () => {
       canvas.width  = canvas.clientWidth;
       canvas.height = canvas.clientHeight;
-      buildNodes();
+      build();
     };
     resize();
 
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
-
-    const onVVChange = () => resize();
-    window.visualViewport?.addEventListener("resize", onVVChange);
-    window.visualViewport?.addEventListener("scroll", onVVChange);
+    window.visualViewport?.addEventListener("resize", resize);
 
     const draw = () => {
       raf = requestAnimationFrame(draw);
       ctx.clearRect(0, 0, W, H);
+      const xOff = xPosRef.current ?? 0;
+      const vel  = Math.min(Math.abs(xOff - lastX) * 0.012, 0.35);
+      lastX = xOff;
+      const wW = W * 7;
 
-      const xOffset   = xPosRef.current ?? 0;
-      const scrollVel = Math.abs(xOffset - lastX);
-      lastX           = xOffset;
-      const velBoost  = Math.min(scrollVel * 0.012, 0.35);
-      const worldW    = W * 5;
-
-      // Advance nodes, bouncing off world edges
       for (const n of nodes) {
-        n.wx += n.vx;
-        n.y  += n.vy;
-        if (n.wx < 0 || n.wx > worldW) n.vx *= -1;
-        if (n.y  < 0 || n.y  > H)     n.vy *= -1;
+        n.wx += n.vx; n.y += n.vy;
+        if (n.wx < 0 || n.wx > wW) n.vx *= -1;
+        if (n.y  < 0 || n.y  > H)  n.vy *= -1;
       }
 
-      // Draw edges between nearby nodes with palette-sampled gradient colour
       for (let i = 0; i < nodes.length; i++) {
-        const ax = nodes[i].wx + xOffset;
-        const ay = nodes[i].y;
-
+        const ax = nodes[i].wx + xOff, ay = nodes[i].y;
         for (let j = i + 1; j < nodes.length; j++) {
-          const bx   = nodes[j].wx + xOffset;
-          const by   = nodes[j].y;
-          const dist = Math.hypot(ax - bx, ay - by);
-          if (dist >= CONNECT_DIST) continue;
-
-          const [r1, g1, b1] = samplePaletteColor(nodes[i].wx, worldW);
-          const [r2, g2, b2] = samplePaletteColor(nodes[j].wx, worldW);
-          const baseAlpha    = (1 - dist / CONNECT_DIST) * 0.28;
-          const alpha        = Math.min(baseAlpha + velBoost * baseAlpha, 0.65);
-
-          const grad = ctx.createLinearGradient(ax, ay, bx, by);
-          grad.addColorStop(0, `rgba(${r1},${g1},${b1},${alpha.toFixed(3)})`);
-          grad.addColorStop(1, `rgba(${r2},${g2},${b2},${alpha.toFixed(3)})`);
-
-          ctx.beginPath();
-          ctx.moveTo(ax, ay);
-          ctx.lineTo(bx, by);
-          ctx.strokeStyle = grad;
-          ctx.lineWidth   = 0.65 + velBoost * 0.6;
-          ctx.stroke();
+          const bx = nodes[j].wx + xOff, by = nodes[j].y;
+          const d  = Math.hypot(ax - bx, ay - by);
+          if (d >= CONNECT_DIST) continue;
+          const [r1,g1,b1] = palColor(nodes[i].wx, wW);
+          const [r2,g2,b2] = palColor(nodes[j].wx, wW);
+          const a = Math.min((1 - d / CONNECT_DIST) * 0.28 * (1 + vel), 0.65);
+          const g = ctx.createLinearGradient(ax, ay, bx, by);
+          g.addColorStop(0, `rgba(${r1},${g1},${b1},${a.toFixed(3)})`);
+          g.addColorStop(1, `rgba(${r2},${g2},${b2},${a.toFixed(3)})`);
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+          ctx.strokeStyle = g; ctx.lineWidth = 0.65 + vel * 0.6; ctx.stroke();
         }
-
-        // Only draw dots for on-screen nodes to avoid wasted GPU calls
         if (ax > -20 && ax < W + 20) {
-          const [r, g, b] = samplePaletteColor(nodes[i].wx, worldW);
-          const dotAlpha  = Math.min(0.30 + velBoost * 0.5, 0.82);
+          const [r,g,b] = palColor(nodes[i].wx, wW);
           ctx.beginPath();
           ctx.arc(ax, ay, 1.8, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${r},${g},${b},${dotAlpha})`;
+          ctx.fillStyle = `rgba(${r},${g},${b},${Math.min(0.30 + vel * 0.5, 0.82)})`;
           ctx.fill();
         }
       }
     };
-
     draw();
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
-      window.visualViewport?.removeEventListener("resize", onVVChange);
-      window.visualViewport?.removeEventListener("scroll", onVVChange);
+      window.visualViewport?.removeEventListener("resize", resize);
     };
-  }, [canvasRef, xPosRef]); // stable refs — no deps needed
+  }, [canvasRef, xPosRef]);
 }
 
 // ─── CardModal ────────────────────────────────────────────────────────────────
 
 const CardModal = ({ card, onClose }) => {
-  const closeButtonRef = useRef(null);
+  const btnRef = useRef(null);
 
   useEffect(() => {
-    // Move focus into the modal immediately
-    closeButtonRef.current?.focus();
+    btnRef.current?.focus();
     document.body.style.overflow = "hidden";
-
-    const onKey = (e) => {
-      if (e.key === "Escape") onClose();
-    };
+    const onKey = (e) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
-
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
@@ -243,11 +211,7 @@ const CardModal = ({ card, onClose }) => {
   }, [onClose]);
 
   return (
-    <div
-      className="card-modal-backdrop"
-      onClick={onClose}
-      role="presentation"
-    >
+    <div className="card-modal-backdrop" onClick={onClose} role="presentation">
       <div
         className="card-modal"
         style={{ "--modal-color": card.color }}
@@ -256,50 +220,21 @@ const CardModal = ({ card, onClose }) => {
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        {/* Left — image */}
         <div className="modal-image-container">
-          <span className="modal-image-number" aria-hidden="true">
-            0{card.id}
-          </span>
+          <span className="modal-image-number" aria-hidden="true">0{card.id}</span>
           <div className="modal-image-frame">
-            <img
-              src={card.image}
-              alt={card.label}
-              className="modal-image"
-              loading="lazy"
-            />
+            <img src={card.image} alt={card.label} className="modal-image" loading="lazy" />
           </div>
         </div>
-
-        {/* Right — content */}
         <div className="modal-content">
-          <button
-            ref={closeButtonRef}
-            className="modal-close"
-            onClick={onClose}
-            aria-label="Close dialog"
-          >
-            ✕
-          </button>
-
+          <button ref={btnRef} className="modal-close" onClick={onClose} aria-label="Close dialog">✕</button>
           <span className="modal-category">EXPERTISE</span>
-          <h2 id="modal-title" className="modal-title">
-            {card.label}
-          </h2>
-
+          <h2 id="modal-title" className="modal-title">{card.label}</h2>
           <div className="modal-divider" aria-hidden="true" />
-
           <p className="modal-description">{card.description}</p>
-
-          {/* ul>li for correct list semantics (was div>span) */}
           <ul className="modal-tags" aria-label="Tags">
-            {card.tags.map((tag) => (
-              <li key={tag} className="modal-tag">
-                {tag}
-              </li>
-            ))}
+            {card.tags.map((tag) => <li key={tag} className="modal-tag">{tag}</li>)}
           </ul>
-
           <button className="modal-cta" onClick={onClose}>
             <span>Learn more</span>
             <span className="modal-cta-arrow" aria-hidden="true">→</span>
@@ -312,289 +247,318 @@ const CardModal = ({ card, onClose }) => {
 
 // ─── HorizontalSection ────────────────────────────────────────────────────────
 
-const HorizontalSection = forwardRef(function HorizontalSection({
-  valuesRef,
-  hxPosRef,
-}) {
-  const sectionRef  = useRef(null);
-  const trackRef    = useRef(null);
-  const canvasRef   = useRef(null);
-  const maxX        = useRef(0);
-  const rafId       = useRef(null);
-  const touchStartY = useRef(0);
-  const touchStartX = useRef(0);
-  const wasLocked   = useRef(false);
-  const [activeCard, setActiveCard] = useState(null);
+const HorizontalSection = forwardRef(function HorizontalSection({ valuesRef, hxPosRef }) {
+  const wrapperRef      = useRef(null);
+  const sectionRef      = useRef(null);
+  const trackRef        = useRef(null);
+  const canvasRef       = useRef(null);
+  const svgRef          = useRef(null);
+  const progressFillRef = useRef(null);
 
-  // hxPosRef IS the shared x-position ref passed from the parent
   const xPos = hxPosRef;
 
-  useInterconnectLines(canvasRef, xPos);
+  const stMainRef   = useRef(null);
+  const stRevealRef = useRef(null);
+  const stProgressRef = useRef(0); // 0→1 overall ST progress, shared with ScrollingLogo
 
-  // ── Measurements ─────────────────────────────────────────────────────────
+  const [activeCard, setActiveCard] = useState(null);
 
-  const calcMaxX = useCallback(() => {
-    if (trackRef.current) {
-      maxX.current = -(trackRef.current.scrollWidth - vvWidth());
-    }
-  }, []);
+  useNodeGraph(canvasRef, xPos);
 
-  // ── DOM mutations ─────────────────────────────────────────────────────────
+  // ── Per-card enter/exit animation via scroll progress ────────────────────
+  // Instead of SVG lines, each card animates in from the right as it enters
+  // and fades/slides out to the left as it exits. Driven by xPos in onUpdate.
 
-  const applyHeight = useCallback(() => {
-    if (sectionRef.current) {
-      sectionRef.current.style.height = `${vvHeight()}px`;
-    }
-  }, []);
-
-  // Sync --vvw to visualViewport width so panel widths are correct at any zoom
-  const applyViewportWidth = useCallback(() => {
-    document.documentElement.style.setProperty("--vvw", `${vvWidth()}px`);
-  }, []);
-
-  // Add .in-view once a card enters the visible horizontal viewport
-  const updateCardVisibility = useCallback((currentX) => {
+  const updateCards = useCallback((currentX) => {
     if (!sectionRef.current) return;
-    const vw = vvWidth();
-    sectionRef.current.querySelectorAll(".gallery-item").forEach((card) => {
-      const cardLeft  = card.offsetLeft + currentX;
-      const cardRight = cardLeft + card.offsetWidth;
-      if (cardLeft < vw * 0.95 && cardRight > 0) {
-        card.classList.add("in-view");
+    const vw = window.innerWidth;
+    sectionRef.current.querySelectorAll(".card-page-panel").forEach((el) => {
+      const left  = el.offsetLeft + currentX; // panel left edge in viewport coords
+      const right = left + el.offsetWidth;
+
+      // Entry: panel coming from the right (fromCentre > 0)
+      // Exit:  panel leaving to the left   (fromCentre < 0)
+      const enterProgress = Math.max(0, Math.min(1, 1 - (left / vw)));        // 0→1 as left edge crosses viewport
+      const exitProgress  = Math.max(0, Math.min(1, -(right / vw)));           // 0→1 as right edge leaves left
+
+      const inView = left < vw * 0.95 && right > 0;
+      if (inView) el.classList.add("in-view");
+
+      // Entry animation: slide in from right + fade
+      const entryOpacity   = Math.min(1, enterProgress * 2);
+      const entryTranslateX = (1 - Math.min(1, enterProgress * 1.5)) * 60;
+
+      // Exit animation: fade + slight scale down as it leaves left
+      const exitOpacity = Math.max(0, 1 - exitProgress * 2.5);
+      const exitScale   = 1 - exitProgress * 0.06;
+
+      if (inView) {
+        el.style.opacity   = Math.min(entryOpacity, exitOpacity).toFixed(3);
+        el.style.transform = exitProgress > 0
+          ? `translateX(0) scale(${exitScale.toFixed(4)})`
+          : `translateX(${entryTranslateX.toFixed(2)}px)`;
+      } else if (right <= 0) {
+        // Fully off-screen left — reset for re-entry from right
+        el.style.opacity   = "0";
+        el.style.transform = "translateX(0)";
       }
     });
   }, []);
 
-  const applyX = useCallback(
-    (newX) => {
-      const clamped = Math.min(0, Math.max(maxX.current, newX));
-      xPos.current = clamped;
-      if (trackRef.current) {
-        trackRef.current.style.transform = `translateX(${clamped}px)`;
-      }
-      updateCardVisibility(clamped);
-    },
-    [xPos, updateCardVisibility]
-  );
-
-  // ── Scroll locking ────────────────────────────────────────────────────────
-
-  /**
-   * Returns true while the section should "own" scroll input.
-   * Two lock conditions:
-   *   1. Section is pinned at the top with horizontal travel remaining.
-   *   2. Section is about to become pinned (snap-back zone near top).
-   */
-  const checkLock = useCallback(() => {
-    if (!sectionRef.current) return false;
-    const rect = sectionRef.current.getBoundingClientRect();
-    const H    = vvHeight();
-
-    const locked =
-      (rect.top <= 1 && rect.bottom > H * 0.5) ||
-      (rect.top > 0 && rect.top < H * 0.08 && xPos.current < -4);
-
-    if (locked && !wasLocked.current) {
-      wasLocked.current = true;
-      sectionRef.current.classList.add("section-active");
-    }
-    if (!locked && rect.bottom < 0) {
-      wasLocked.current = false;
-      sectionRef.current.classList.remove("section-active");
-    }
-    return locked;
-  }, [xPos]);
-
-  /**
-   * Snaps the page scroll to the section's top edge.
-   * Null-guards offsetTop to avoid a crash if the ref is momentarily detached.
-   */
-  const pinSection = useCallback(() => {
-    const target = sectionRef.current?.offsetTop;
-    if (target != null && Math.abs(window.scrollY - target) > 1) {
-      window.scrollTo({ top: target, behavior: "instant" });
-    }
+  // ── SVG ref kept but cleared — no connector lines ────────────────────────
+  const clearSVG = useCallback(() => {
+    if (svgRef.current) svgRef.current.innerHTML = "";
   }, []);
 
-  // ── Input handlers ────────────────────────────────────────────────────────
+  // ── Text reveal — pure GSAP ScrollTrigger ────────────────────────────────
+  //
+  // Runs on a separate ST that fires BEFORE the pin (start:"top 85%", end:"top 5%").
+  // scrub:0.6 makes it 1:1 with scroll position — text is always in the
+  // correct state, never frozen mid-animation.
+  // onLeave snaps to final state so it stays visible during the horizontal scroll.
 
-  const onWheel = useCallback(
-    (e) => {
-      if (activeCard || !checkLock()) return;
-      const delta = e.deltaY || e.deltaX;
-      // Let the page scroll naturally when already at horizontal edges
-      if (delta < 0 && xPos.current >= 0)            return;
-      if (delta > 0 && xPos.current <= maxX.current) return;
-      e.preventDefault();
-      pinSection();
-      cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(() =>
-        applyX(xPos.current - delta * 1.2)
-      );
-    },
-    [checkLock, pinSection, applyX, xPos, activeCard]
-  );
+  const initTextReveal = useCallback(() => {
+    stRevealRef.current?.kill();
+    if (!wrapperRef.current) return;
 
-  const onTouchStart = useCallback((e) => {
-    touchStartY.current = e.touches[0].clientY;
-    touchStartX.current = e.touches[0].clientX;
+    // Hard-set starting state (overrides CSS, ensures consistency on re-init)
+    gsap.set(".values-eyebrow", { opacity: 0, clearProps: "transform,filter" });
+    gsap.set(".vh-word", { opacity: 0, y: 28, rotation: 1.8, filter: "blur(6px)" });
+    gsap.set(".values-hint", { opacity: 0, clearProps: "transform,filter" });
+
+    const tl = gsap.timeline();
+
+    tl.to(".values-eyebrow", { opacity: 1, duration: 0.25, ease: "power1.out" }, 0)
+      .to(".vh-word", {
+        opacity: 1,
+        y: 0,
+        rotation: 0,
+        filter: "blur(0px)",
+        duration: 0.45,
+        stagger: 0.07,
+        ease: "power2.out",
+      }, 0.1)
+      .to(".values-hint", { opacity: 1, duration: 0.25, ease: "power1.out" }, 0.65);
+
+    stRevealRef.current = ScrollTrigger.create({
+      trigger: wrapperRef.current,
+      start: "top 90%",    // start when section top hits 90% from viewport top
+      end: "top 8%",       // end just before the pin locks in
+      scrub: 0.5,
+      animation: tl,
+      onLeave() {
+        // Snap to final visible state — prevents any residual blur/opacity
+        gsap.set(".values-eyebrow", { opacity: 1 });
+        gsap.set(".vh-word", { opacity: 1, y: 0, rotation: 0, filter: "blur(0px)" });
+        gsap.set(".values-hint", { opacity: 1 });
+      },
+      onLeaveBack() {
+        // When user scrolls back up past the reveal zone, reset to hidden
+        gsap.set(".values-eyebrow", { opacity: 0 });
+        gsap.set(".vh-word", { opacity: 0, y: 28, rotation: 1.8, filter: "blur(6px)" });
+        gsap.set(".values-hint", { opacity: 0 });
+      },
+    });
   }, []);
 
-  const onTouchMove = useCallback(
-    (e) => {
-      if (activeCard || !checkLock()) return;
-      const dy    = touchStartY.current - e.touches[0].clientY;
-      const dx    = touchStartX.current - e.touches[0].clientX;
-      const delta = Math.abs(dy) > Math.abs(dx) ? dy : dx;
-      if (delta < 0 && xPos.current >= 0)            return;
-      if (delta > 0 && xPos.current <= maxX.current) return;
-      e.preventDefault();
-      pinSection();
-      cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(() =>
-        applyX(xPos.current - delta * 1.8)
-      );
-      touchStartY.current = e.touches[0].clientY;
-      touchStartX.current = e.touches[0].clientX;
-    },
-    [checkLock, pinSection, applyX, xPos, activeCard]
-  );
-
-  /** Prevents the page from over-scrolling past the section boundaries. */
-  const onScroll = useCallback(() => {
-    if (!sectionRef.current) return;
-    const sectionTop = sectionRef.current.offsetTop;
-    const sy         = window.scrollY;
-
-    if (sy > sectionTop + 4 && xPos.current > maxX.current + 4) {
-      window.scrollTo({ top: sectionTop, behavior: "instant" });
-      return;
-    }
-    if (sy < sectionTop - 4 && xPos.current < -4) {
-      window.scrollTo({ top: sectionTop, behavior: "instant" });
-      return;
-    }
-    const rect = sectionRef.current.getBoundingClientRect();
-    if (rect.top <= 1 && rect.top > -10) pinSection();
-  }, [xPos, pinSection]);
-
-  // ── Layout sync (runs synchronously before paint) ─────────────────────────
+  // ── Main horizontal ScrollTrigger ─────────────────────────────────────────
   //
-  // useLayoutEffect ensures --vvw and section height are applied on the very
-  // first paint, eliminating the one-frame flash at zoom ≠ 100% where panels
-  // briefly render at layout-viewport width before JS corrects them.
-  //
-  useLayoutEffect(() => {
-    applyHeight();
-    applyViewportWidth();
-    calcMaxX();
-    updateCardVisibility(xPos.current);
-  }, [applyHeight, applyViewportWidth, calcMaxX, updateCardVisibility, xPos]);
+  // Scroll delay: the tween starts with a GSAP timeline that holds x=0 for
+  // `DELAY_VW` viewport-widths of scroll before beginning horizontal travel.
+  // This gives the user time to read the values panel text before cards appear.
 
-  // ── Event listeners ───────────────────────────────────────────────────────
+  const initGSAP = useCallback(() => {
+    if (!wrapperRef.current || !trackRef.current) return;
+    stMainRef.current?.kill();
+
+    const track    = trackRef.current;
+    const wrapper  = wrapperRef.current;
+    const trackW   = track.scrollWidth;
+    const vw       = window.innerWidth;
+    const distance = trackW - vw;
+
+    // Extra scroll distance to hold on the values panel (in px, = 1 × vw here)
+    const DELAY_PX = vw * 1.0;
+    const totalEnd = distance + DELAY_PX;
+
+    wrapper.style.height = "";
+    gsap.set(track, { x: 0 });
+
+    // Timeline: hold at x=0 for DELAY_PX of scroll, then travel distance
+    const tl = gsap.timeline();
+    tl.to(track, { x: 0,         ease: "none", duration: DELAY_PX  })   // hold
+      .to(track, { x: -distance, ease: "none", duration: distance   });  // scroll
+
+    stMainRef.current = ScrollTrigger.create({
+      trigger: wrapper,
+      start: "top top",
+      end: `+=${totalEnd}`,
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      animation: tl,
+      invalidateOnRefresh: true,
+      onUpdate(self) {
+        stProgressRef.current = self.progress;
+        // Also expose on hxPosRef so ScrollingLogo can read it without a new prop
+        xPos.stProgress = self.progress;
+        const currentX = gsap.getProperty(track, "x");
+        xPos.current = currentX;
+        updateCards(currentX);
+
+        if (progressFillRef.current) {
+          // Progress bar only reflects horizontal travel (not the delay)
+          const p = Math.max(0, Math.min(1, Math.abs(currentX) / distance));
+          progressFillRef.current.style.transform = `scaleX(${p})`;
+        }
+      },
+      onEnter()     { sectionRef.current?.classList.add("section-active"); },
+      onLeave()     { sectionRef.current?.classList.remove("section-active"); },
+      onEnterBack() { sectionRef.current?.classList.add("section-active"); },
+      onLeaveBack() { sectionRef.current?.classList.remove("section-active"); },
+    });
+  }, [xPos, updateCards]);
+
+  // ── IntersectionObserver — section fade-in ────────────────────────────────
 
   useEffect(() => {
-    const onVVChange = () => {
-      applyHeight();
-      applyViewportWidth();
-      calcMaxX();
-      applyX(xPos.current); // re-clamp immediately after any resize
+    const section = sectionRef.current;
+    if (!section) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) { section.classList.add("hs-visible"); io.disconnect(); }
+      },
+      { threshold: 0.05 }
+    );
+    io.observe(section);
+    return () => io.disconnect();
+  }, []);
+
+  // ── Initial layout ────────────────────────────────────────────────────────
+
+  useLayoutEffect(() => {
+    clearSVG();
+    const id = setTimeout(() => {
+      initGSAP();
+      initTextReveal();
+      updateCards(0);
+      ScrollTrigger.refresh();
+    }, 100);
+    return () => clearTimeout(id);
+  }, [clearSVG, initGSAP, initTextReveal, updateCards]);
+
+  // ── Resize ────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    const onResize = () => {
+      clearSVG();
+      initGSAP();
+      initTextReveal();
+      ScrollTrigger.refresh();
     };
-
-    const ro = new ResizeObserver(onVVChange);
-    if (sectionRef.current) ro.observe(sectionRef.current);
-
-    window.visualViewport?.addEventListener("resize", onVVChange);
-    window.visualViewport?.addEventListener("scroll", onVVChange);
-    window.addEventListener("resize",     onVVChange);
-    window.addEventListener("wheel",      onWheel,      { passive: false });
-    window.addEventListener("touchstart", onTouchStart, { passive: true  });
-    window.addEventListener("touchmove",  onTouchMove,  { passive: false });
-    window.addEventListener("scroll",     onScroll,     { passive: true  });
-
+    window.addEventListener("resize", onResize);
+    window.visualViewport?.addEventListener("resize", onResize);
     return () => {
-      window.visualViewport?.removeEventListener("resize", onVVChange);
-      window.visualViewport?.removeEventListener("scroll", onVVChange);
-      window.removeEventListener("resize",     onVVChange);
-      window.removeEventListener("wheel",      onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove",  onTouchMove);
-      window.removeEventListener("scroll",     onScroll);
-      ro.disconnect();
-      cancelAnimationFrame(rafId.current);
+      window.removeEventListener("resize", onResize);
+      window.visualViewport?.removeEventListener("resize", onResize);
     };
-  }, [
-    onWheel, onTouchStart, onTouchMove, onScroll,
-    applyHeight, applyViewportWidth, applyX, calcMaxX,
-    xPos, updateCardVisibility,
-  ]);
+  }, [clearSVG, initGSAP, initTextReveal]);
+
+  // ── Cleanup ───────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    return () => {
+      stMainRef.current?.kill();
+      stRevealRef.current?.kill();
+    };
+  }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <>
-      <section
-        id="values-expertise"
-        ref={sectionRef}
-        className="horizontal-section"
-      >
-        <div className="hs-grain" aria-hidden="true" />
-        <canvas
-          ref={canvasRef}
-          className="hs-lines-canvas"
-          aria-hidden="true"
-        />
+      <div ref={wrapperRef} className="hs-wrapper" id="values-expertise">
+        <section ref={sectionRef} className="horizontal-section">
+          <div className="hs-grain" aria-hidden="true" />
+          <canvas ref={canvasRef} className="hs-lines-canvas" aria-hidden="true" />
 
-        <div ref={trackRef} className="hs-track">
+          <div ref={trackRef} className="hs-track">
 
-          {/* Panel 1 — Values */}
-          <div ref={valuesRef} className="hs-panel values-panel">
-            <div className="values-inner">
-              <p className="values-eyebrow">OUR CORE VALUES</p>
-              <h2 className="values-headline">
-                The principles<br />
-                that drive<br />
-                everything<br />
-                we do.
-              </h2>
-              <p className="values-hint" aria-label="Scroll to explore">
-                SCROLL TO EXPLORE →
-              </p>
+            {/* ── Panel 0 — Values intro ──────────────────────────────────── */}
+            <div ref={valuesRef} className="hs-panel values-panel">
+              <div className="values-inner">
+                <p className="values-eyebrow">OUR CORE VALUES</p>
+                <h2
+                  className="values-headline"
+                  aria-label="BuildMindz is the elite builders collective."
+                >
+                  {["BuildMindz", "is", "the", "elite", "builders", "collective."].map((word, i) => (
+                    <span key={i} className="vh-word-wrap">
+                      <span className="vh-word" style={{ "--wi": i }}>{word}</span>
+                    </span>
+                  ))}
+                </h2>
+                <p className="values-hint" aria-label="Scroll to explore">
+                  SCROLL TO EXPLORE →
+                </p>
+              </div>
             </div>
-          </div>
 
-          {/* Panel 2 — Cards */}
-          <div className="hs-panel cards-panel" role="list">
+            {/* ── Panels 1–N — Card panels ────────────────────────────────── */}
             {CARDS.map((card) => (
               <div
                 key={card.id}
-                className="gallery-item"
-                style={{
-                  "--item-color": card.color,
-                  "--item-image": `url(${card.image})`,
-                }}
-                onClick={() => setActiveCard(card)}
-                role="listitem"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && setActiveCard(card)}
-                aria-label={`Expand ${card.label}`}
+                className="hs-panel card-page-panel"
+                style={{ "--card-color": card.color, "--card-image": `url(${card.image})` }}
               >
-                <div className="item-content">
-                  <span className="item-number" aria-hidden="true">
-                    0{card.id}
-                  </span>
-                  <h3>{card.label}</h3>
-                  <span className="item-expand-hint" aria-hidden="true">
-                    Click to explore →
-                  </span>
+                <div
+                  className="cpp-image-col"
+                  onClick={() => setActiveCard(card)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && setActiveCard(card)}
+                  aria-label={`Expand ${card.label}`}
+                >
+                  <span className="cpp-num" aria-hidden="true">0{card.id}</span>
+                  <div className="cpp-img-overlay" aria-hidden="true" />
+                  <div className="cpp-img-shine"   aria-hidden="true" />
+                  <span className="cpp-expand-hint" aria-hidden="true">Click to explore →</span>
                 </div>
-                <div className="item-shine" aria-hidden="true" />
+                <div className="cpp-content-col">
+                  <span className="cpp-eyebrow">EXPERTISE</span>
+                  <h3 className="cpp-title">{card.label}</h3>
+                  <div className="cpp-divider" aria-hidden="true" />
+                  <p className="cpp-description">{card.description}</p>
+                  <ul className="cpp-tags" aria-label="Tags">
+                    {card.tags.map((t) => <li key={t} className="cpp-tag">{t}</li>)}
+                  </ul>
+                  <button className="cpp-cta" onClick={() => setActiveCard(card)}>
+                    <span>Explore</span>
+                    <span className="cpp-cta-arrow" aria-hidden="true">→</span>
+                  </button>
+                </div>
               </div>
             ))}
+
+            <svg ref={svgRef} className="hs-connect-svg" aria-hidden="true" />
           </div>
 
-        </div>
-      </section>
+          {/* Progress bar */}
+          <div className="hs-progress-line" aria-hidden="true">
+            <div ref={progressFillRef} className="hs-progress-fill" />
+            {CARDS.map((card, i) => (
+              <span
+                key={card.id}
+                className="hs-progress-dot"
+                style={{
+                  "--dot-color": card.color,
+                  left: `${((i + 1) / (CARDS.length + 1)) * 100}%`,
+                }}
+              />
+            ))}
+          </div>
+        </section>
+      </div>
 
       {activeCard && (
         <CardModal card={activeCard} onClose={() => setActiveCard(null)} />

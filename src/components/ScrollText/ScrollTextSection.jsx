@@ -46,7 +46,6 @@ export default function ScrollTextSection() {
       {/* Panel 1 — full-width headline */}
       <div className="st-panel st-panel--hero">
         <div className="st-panel-inner">
-          <span className="st-label">01</span>
           <TextAnimation
             as="h2"
             text="Creative ideas start here."
@@ -63,7 +62,6 @@ export default function ScrollTextSection() {
       <div className="st-panel st-panel--split">
         <div className="st-split-text st-split-text--left">
           <div className="st-text-group">
-            <span className="st-label">02</span>
             <TextAnimation
               as="p"
               text="We use logic and strategy to execute with clinical precision"
@@ -88,7 +86,6 @@ export default function ScrollTextSection() {
         </div>
         <div className="st-split-text st-split-text--right">
           <div className="st-text-group">
-            <span className="st-label st-label--right">03</span>
             <TextAnimation
               as="h3"
               text="BuildMindz understands architecture and deep design concepts"
@@ -105,7 +102,6 @@ export default function ScrollTextSection() {
       {/* Panel 4 — closing statement */}
       <div className="st-panel st-panel--closing">
         <div className="st-panel-inner">
-          <span className="st-label">04</span>
           <TextAnimation
             as="h3"
             text="WE BUILD MINDS, NOT JUST PRODUCTS"

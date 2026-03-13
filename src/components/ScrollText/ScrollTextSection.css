@@ -1,4 +1,11 @@
 /* ─────────────────────────────────────────────
+   ADJUST THIS to move panels closer to centre
+───────────────────────────────────────────── */
+:root {
+  --panel-padding-x: clamp(1rem, 30vw, 30rem); /* decrease to pull inward */
+}
+
+/* ─────────────────────────────────────────────
    SECTION
 ───────────────────────────────────────────── */
 .scroll-text-section {
@@ -43,7 +50,7 @@
   min-height: 88vh;
   display: flex;
   align-items: center;
-  padding: clamp(4rem, 8vw, 10rem) clamp(2rem, 7vw, 10rem);
+  padding: clamp(4rem, 8vw, 10rem) var(--panel-padding-x);
   box-sizing: border-box;
 }
 
